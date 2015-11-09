@@ -90,11 +90,46 @@ void SpecificWorker::compute()
 void SpecificWorker::histogram()
 {
 	static QGraphicsPolygonItem *p;
-	static QGraphicsLineItem *l;
+	static QGraphicsLineItem *l, *sr, *sl, *safety;
+	const float R = 400; //Robot radius
+	const float SAFETY = 600;
 
 	scene.removeItem(p);
 	scene.removeItem(l);
-		
+	scene.removeItem(sr);
+	scene.removeItem(sl);
+	scene.removeItem(safety);
+	
+	//Search the first increasing step from the center to the right
+	uint i,j;
+	for(i=ldata.size()/2; i>0; i--)
+	{
+		if( (ldata[i].dist - ldata[i-1].dist) < -R )
+		{
+			uint k=i-2;
+			while( (k >= 0) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle)) < R ))
+			{ k--; }
+			i=k;
+			break;
+		}
+	}
+	for(j=ldata.size()/2; j<ldata.size()-1; j++)
+	{
+		if( (ldata[j].dist - ldata[j+1].dist) < -R )
+		{
+			uint k=j+2;
+			while( (k < ldata.size()) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[j+1].angle)) < R ))
+			{ k++; }
+			j=k;
+			break;
+		}
+	}
+	
+	safety = scene.addLine(QLine(QPoint(0,-SAFETY/100),QPoint(ldata.size(),-SAFETY/100)), QPen(QColor(Qt::yellow)));
+	sr = scene.addLine(QLine(QPoint(i,0),QPoint(i,-40)), QPen(QColor(Qt::blue)));
+	sl = scene.addLine(QLine(QPoint(j,0),QPoint(j,-40)), QPen(QColor(Qt::magenta)));
+	
+	//DRAW		
 	QPolygonF poly;
 	int x=0;
 	poly << QPointF(0, 0);
@@ -103,10 +138,12 @@ void SpecificWorker::histogram()
 		poly << QPointF(++x, -d.dist/100); // << QPointF(x+5, d.dist) << QPointF(x+5, 0);
 	poly << QPointF(x, 0);
 
-	l = scene.addLine(QLine(QPoint(ldata.size()/2,0),QPoint(ldata.size()/2,-40)), QPen(QColor(Qt::red)));
-
+	l = scene.addLine(QLine(QPoint(ldata.size()/2,0),QPoint(ldata.size()/2,-20)), QPen(QColor(Qt::red)));
   p = scene.addPolygon(poly, QPen(QColor(Qt::green)));
+	
 	scene.update();
+	
+	//select the best subtarget and return coordinates
 }
 
 
