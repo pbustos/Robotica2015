@@ -1,0 +1,13 @@
+import "/robocomp/interfaces/IDSLs/DifferentialRobot.idsl";
+import "/robocomp/interfaces/IDSLs/Laser.idsl";
+import "/robocomp/interfaces/IDSLs/AprilTags.idsl";
+import "/robocomp/interfaces/IDSLs/Controller.idsl";
+
+Component MyFirstComp{
+    Communications{
+        requires DifferentialRobot, Laser, Controller;
+	subscribesTo AprilTags;
+    };
+gui Qt(QWidget);
+language Cpp; //language Python;
+};
