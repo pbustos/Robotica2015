@@ -26,8 +26,6 @@
 
 
 
-
-
 #ifndef SPECIFICWORKER_H
 #define SPECIFICWORKER_H
 
@@ -60,7 +58,7 @@ public slots:
 private:
 	NavState state;
 	InnerModel* inner;
-	TLaserData ldata;
+	TLaserData ldata, ldataR;
 	TBaseState bState;
 	currentTarget cTarget;
 	QGraphicsScene scene;

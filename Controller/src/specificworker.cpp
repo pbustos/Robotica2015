@@ -53,6 +53,9 @@ void SpecificWorker::compute()
   {
      differentialrobot_proxy->getBaseState(bState);
      ldata = laser_proxy->getLaserData();
+     TLaserData ldataR(ldata.rbegin(), ldata.rend());
+     ldata = ldataR;
+     
      inner->updateTransformValues("base", bState.x, 0, bState.z, 0, bState.alpha, 0);
      
      if( state.state == "WORKING")
