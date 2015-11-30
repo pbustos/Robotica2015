@@ -26,7 +26,7 @@ SET ( SOURCES
   commonbehaviorI.cpp
   genericworker.cpp
   specificworker.cpp
-  controllerI.cpp
+  trajectoryrobot2dI.cpp
 )
 
 # Headers set
@@ -37,11 +37,14 @@ SET ( HEADERS
   commonbehaviorI.h
   genericworker.h
   specificworker.h
-  controllerI.h
+  trajectoryrobot2dI.h
 )
+
+
+
 #ROBOCOMP
 ROBOCOMP_INITIALIZE( $ENV{ROBOCOMP}/ )
-ROBOCOMP_WRAP_ICE( CommonBehavior Laser DifferentialRobot DifferentialRobot Controller )
+ROBOCOMP_WRAP_ICE( CommonBehavior Laser DifferentialRobot DifferentialRobot TrajectoryRobot2D )
 SET (EXECUTABLE_OUTPUT_PATH ${RC_COMPONENT_DEVEL_PATH}/bin)
 
 # Qt4

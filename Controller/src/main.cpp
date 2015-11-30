@@ -78,11 +78,11 @@
 #include "specificmonitor.h"
 #include "commonbehaviorI.h"
 
-#include <controllerI.h>
+#include <trajectoryrobot2dI.h>
 
 #include <Laser.h>
 #include <DifferentialRobot.h>
-#include <Controller.h>
+#include <TrajectoryRobot2D.h>
 
 
 // User includes here
@@ -93,7 +93,7 @@ using namespace RoboCompCommonBehavior;
 
 using namespace RoboCompLaser;
 using namespace RoboCompDifferentialRobot;
-using namespace RoboCompController;
+using namespace RoboCompTrajectoryRobot2D;
 
 
 
@@ -199,14 +199,16 @@ int ::Controller::run(int argc, char* argv[])
 
 
 		// Server adapter creation and publication
-		if (not GenericMonitor::configGetString(communicator(), prefix, "Controller.Endpoints", tmp, ""))
+		if (not GenericMonitor::configGetString(communicator(), prefix, "TrajectoryRobot2D.Endpoints", tmp, ""))
 		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy Controller";
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy TrajectoryRobot2D";
 		}
-		Ice::ObjectAdapterPtr adapterController = communicator()->createObjectAdapterWithEndpoints("Controller", tmp);
-		ControllerI *controller = new ControllerI(worker);
-		adapterController->add(controller, communicator()->stringToIdentity("controller"));
-		adapterController->activate();
+		Ice::ObjectAdapterPtr adapterTrajectoryRobot2D = communicator()->createObjectAdapterWithEndpoints("TrajectoryRobot2D", tmp);
+		TrajectoryRobot2DI *trajectoryrobot2d = new TrajectoryRobot2DI(worker);
+		adapterTrajectoryRobot2D->add(trajectoryrobot2d, communicator()->stringToIdentity("trajectoryrobot2d"));
+		adapterTrajectoryRobot2D->activate();
+		cout << "[" << PROGRAM_NAME << "]: TrajectoryRobot2D adapter created in port " << tmp << endl;
+
 
 
 

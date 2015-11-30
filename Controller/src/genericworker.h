@@ -28,8 +28,8 @@
 
 #include <CommonBehavior.h>
 #include <DifferentialRobot.h>
-#include <Controller.h>
 #include <Laser.h>
+#include <TrajectoryRobot2D.h>
 
 
 
@@ -41,8 +41,8 @@ typedef map <string,::IceProxy::Ice::Object*> MapPrx;
 using namespace std;
 
 using namespace RoboCompDifferentialRobot;
-using namespace RoboCompController;
 using namespace RoboCompLaser;
+using namespace RoboCompTrajectoryRobot2D;
 
 
 
@@ -68,9 +68,13 @@ public:
 	DifferentialRobotPrx differentialrobot_proxy;
 	LaserPrx laser_proxy;
 
-	virtual float go(const TargetPose &target) = 0;
 	virtual NavState getState() = 0;
+	virtual float goBackwards(const TargetPose &target) = 0;
 	virtual void stop() = 0;
+	virtual float goReferenced(const TargetPose &target, const float xRef, const float zRef, const float threshold) = 0;
+	virtual float changeTarget(const TargetPose &target) = 0;
+	virtual float go(const TargetPose &target) = 0;
+	virtual void mapBasedTarget(const NavigationParameterMap &parameters) = 0;
 
 
 protected:

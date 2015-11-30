@@ -23,12 +23,52 @@
 */
 SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 {
-  inner = new InnerModel("/home/robocomp/robocomp/files/innermodel/simpleworld.xml");
-  state.state="IDLE";
-
+  //inner = new InnerModel("/home/robocomp/robocomp/files/innermodel/simpleworld.xml");
+	QString innerFile = "/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/rockinSimple.xml";
+	if( QFile::exists(innerFile) )
+		inner = new InnerModel("/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/rockinSimple.xml");
+	else	
+		qFatal("InnerModel file not found");
+		
+	
+	//Set odometry for initial robot TargetPose
+	try
+	{
+		differentialrobot_proxy->getBaseState(bState);
+		qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
+		try
+		{
+			inner->transform("world",QVec::zeros(6),"initialRobotPose");
+			if( bState.x == 0 and bState.z == 0 )	//RCIS just initiated. We change robot odometry to the initialRobotPose
+			{
+				QVec rpos = inner->transform("world", QVec::zeros(6),"robot");
+				RoboCompDifferentialRobot::TBaseState bs; bs.x=rpos.x(); bs.z=rpos.z();bs.alpha=rpos.ry();
+				differentialrobot_proxy->setOdometer(bs);
+				qDebug()<< "Robot odometry set to" << rpos;
+			}
+			else
+				inner->updateTransformValues("initialRobotPose", 0,0,0,0,0,0);
+		}
+		catch(std::exception &ex) {std::cout<<ex.what()<<std::endl;};
+	}
+	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
+	qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
+		
 	graphicsView->setScene(&scene);
 	graphicsView->show();
 	graphicsView->scale(3,3);
+	
+	//Innermodelviewer
+	osgView = new OsgView(this);
+	osgGA::TrackballManipulator *tb = new osgGA::TrackballManipulator;
+	osg::Vec3d eye(osg::Vec3(4000.,4000.,-1000.));
+	osg::Vec3d center(osg::Vec3(0.,0.,-0.));
+	osg::Vec3d up(osg::Vec3(0.,1.,0.));
+	tb->setHomePosition(eye, center, up, true);
+	tb->setByMatrix(osg::Matrixf::lookAt(eye,center,up));
+ 	osgView->setCameraManipulator(tb);
+	innerViewer = new InnerModelViewer(inner, "root", osgView->getRootGroup(), true);
+	show();
 }
 
 /**
@@ -41,8 +81,9 @@ SpecificWorker::~SpecificWorker()
 
 bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 {	
-	timer.start(Period);
-
+	//timer.start(Period);
+	timer.start(300);
+	
 	return true;
 }
 
@@ -52,42 +93,74 @@ void SpecificWorker::compute()
   try
   {
      differentialrobot_proxy->getBaseState(bState);
+		 //qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
      ldata = laser_proxy->getLaserData();
-     TLaserData ldataR(ldata.rbegin(), ldata.rend());
-     ldata = ldataR;
-     
-     inner->updateTransformValues("base", bState.x, 0, bState.z, 0, bState.alpha, 0);
-     
-     if( state.state == "WORKING")
-     {
-	if( heLlegado() )
-	{ 
-	  qDebug()<<"he llegado";
-	  differentialrobot_proxy->setSpeedBase(0,0);
-	  state.state = "FINISH";
-	  sleep(2);
-	   state.state = "IDLE";
-	  return;
+     //TLaserData ldataR(ldata.rbegin(), ldata.rend());
+     //ldata = ldataR;
+     inner->updateTransformValues("robot", bState.x, 0, bState.z, 0, bState.alpha, 0);
+// 		 qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
+//      qDebug() << __FUNCTION__<< inner->transform("world","robot");
+		 
+		 float alpha;
+		 QVec t;
+		 
+		 switch( state )
+		 {
+			 case State::INIT:
+				 state = State::IDLE;
+				 break;
+				 
+			 case State::IDLE:
+				 break;
+				 
+			 case State::WORKING:
+				 if( atTarget() )
+				 { 
+						qDebug()<< __FUNCTION__<< "Arrived to target" << cTarget.target;
+						stopRobot();
+						state = State::FINISH;
+					}
+					else if(freeWay())
+					{
+						goToTarget(); 
+					}
+// 					else if(cTarget.isActiveSubtarget == true)
+// 					{
+// 						goToSubTarget(); 
+// 					}
+// 					else
+// 					{
+// 						createSubTarget();
+// 					}
+					break;
+					
+			 case State::TURN:
+				 t = inner->transform("robot", cTarget.target, "world");
+				 alpha =atan2(t.x(), t.z() );
+				 if( alpha <= ldata.front().angle and alpha >= ldata. back().angle)
+				 {
+						stopRobot();
+						state = State::WORKING;
+				 }
+				 else
+					 try{ differentialrobot_proxy->setSpeedBase(0, 0.4);}
+					 catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
+				 break;
+				 
+			 case State::FINISH:
+						sleep(2);
+						undrawTarget("target");
+						state = State::IDLE;
+				 break;
+	  	}
 	}
-      
-       else if(hayCamino())
-       {
-	   goToTarget(); 
-       }
-       else if(cTarget.activeSub == true)
-       {
-	  goToSubTarget(); 
-       }
-       else
-       {
-	 createSubTarget();
-       }
-    }
-  }
   catch(const Ice::Exception &e)
   {    std::cout << "Error reading from Camera" << e << std::endl;  }
 	
-	histogram();
+	//histogram();
+	innerViewer->update();
+	osgView->autoResize();
+	osgView->frame();
 }
 
 void SpecificWorker::histogram()
@@ -104,24 +177,24 @@ void SpecificWorker::histogram()
 	scene.removeItem(safety);
 	
 	//Search the first increasing step from the center to the right
-	uint i,j;
-	for(i=ldata.size()/2; i>0; i--)
+	int i,j;
+	for(i=(int)ldata.size()/2; i>0; i--)
 	{
 		if( (ldata[i].dist - ldata[i-1].dist) < -R )
 		{
-			uint k=i-2;
-			while( (k >= 0) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle)) < R ))
+			int k=i-2;
+			while( (k > 0) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle)) < R ))
 			{ k--; }
 			i=k;
 			break;
 		}
 	}
-	for(j=ldata.size()/2; j<ldata.size()-1; j++)
+	for(j=(int)ldata.size()/2; j<(int)ldata.size()-1; j++)
 	{
 		if( (ldata[j].dist - ldata[j+1].dist) < -R )
 		{
-			uint k=j+2;
-			while( (k < ldata.size()) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[j+1].angle)) < R ))
+			int k=j+2;
+			while( (k < (int)ldata.size()-1) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[j+1].angle)) < R ))
 			{ k++; }
 			j=k;
 			break;
@@ -150,70 +223,84 @@ void SpecificWorker::histogram()
 }
 
 
-bool SpecificWorker::heLlegado()
+bool SpecificWorker::atTarget()
 {
-  QVec t = inner->transform("rgbd", cTarget.target, "world");
-  //qDebug()<< cTarget.target;
+  QVec t = inner->transform("robot", cTarget.target, "world");
   float d = t.norm2();
-  //qDebug()<< "distancia: "<<d;
-  if ( d < 400 ) 
+  qDebug()<< __FUNCTION__<< "target " << t << "distancia: " << d;
+  
+	if ( d < 100 )
+	{
+		qDebug() << __FUNCTION__<< " = true";
     return true;
-  else return false;
+	}
+  else 
+	{
+		qDebug() << __FUNCTION__<< " = false";
+		return false;
+	}
 }
 
-bool SpecificWorker::hayCamino()
+bool SpecificWorker::freeWay()
 {
-  
-  QVec t = inner->transform("rgbd", cTarget.target, "world");
+	QVec t = inner->transform("robot", cTarget.target, "world");
   float d = t.norm2();
   float alpha =atan2(t.x(), t.z() );
+	
+  qDebug()<< __FUNCTION__<< "target " << t << "distancia: " << d;
   
-  //qDebug() << d << alpha;
-  for(uint i = 0; i<ldata.size(); i++)
+	for(uint i = 0; i<ldata.size(); i++)
   {
-      if(ldata[i].angle < alpha)
-      {
-	if( ldata[i].dist < d)
-	{
-	  return false;
-	}
-	else
-	{
-	  cTarget.activeSub=false;
-	  qDebug()<<"hay camino";
-	  return true;
-	}
-      }
+		if(ldata[i].angle <= alpha)
+    {
+			if( ldata[i].dist < d)
+			{	
+				qDebug() << __FUNCTION__<< " = false";
+				return false;
+			}
+			else
+			{
+				cTarget.isActiveSubtarget = false;
+				qDebug()<<__FUNCTION__<< "Hay camino libre al target" << ldata[i].dist << d;
+				return true;
+			}
+     }
   }
+  qDebug() << "The target is behind. I should turn around";
+	state = State::TURN;
   return false;
 }
 
 void SpecificWorker::goToTarget()
 {
-   qDebug()<<"andar";
-
-    QVec t = inner->transform("rgbd", cTarget.target, "world");
-    float alpha =atan2(t.x(), t.z());
-    float r= 0.3*alpha;
-    float d = 0.3*t.norm2();
-    if( fabs(r) > 0.2) d = 0;
-    if(d>300)d=300;
-    differentialrobot_proxy->setSpeedBase(d,r);
-}
+	QVec t = inner->transform("robot", cTarget.target, "world");
+  float alpha =atan2(t.x(), t.z());
+  float r = 0.3*alpha;
+  float d = 0.3*t.norm2();
+  
+	if( fabs(r) > 0.2) d = 0;
+  if(d>300) d=300;
+	
+	qDebug() << __FUNCTION__ << t << "rot" << r << "adv" << d;
+	
+	try
+	{		differentialrobot_proxy->setSpeedBase(d,r); }
+	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
+ }
 
 void SpecificWorker::goToSubTarget()
 {
-    qDebug()<<  __FUNCTION__<<"ir subTarget";  
-    QVec t = inner->transform("laser", cTarget.subTarget, "world");
-    float alpha =atan2(t.x(), t.z());
-    float r= 0.4*alpha;
-    float d = t.norm2();
-    qDebug()<<  __FUNCTION__<< "subtarget" << cTarget.subTarget;
-   qDebug()<<  __FUNCTION__<< "subtarget"<< d << alpha << d << r;
+  qDebug()<<  __FUNCTION__<<"ir subTarget";  
+  QVec t = inner->transform("robot", cTarget.subTarget, "world");
+  float alpha =atan2(t.x(), t.z());
+  float r= 0.4*alpha;
+  float d = t.norm2();
+  qDebug()<<  __FUNCTION__<< "subtarget" << cTarget.subTarget;
+  qDebug()<<  __FUNCTION__<< "subtarget"<< d << alpha << d << r;
    
     if(d<100)
     {
-        cTarget.activeSub=false;
+        cTarget.isActiveSubtarget = false;
 
     //  qFatal("fary");
         differentialrobot_proxy->setSpeedBase(0,0);
@@ -287,7 +374,7 @@ void SpecificWorker::createSubTarget()
       if(ldata[j].dist> (dt+(dt*0.2)) and ldata[j].angle < 0)
       {
 	cTarget.subTarget=inner->transform("world", QVec::vec3(ldata[j].dist *sin(ldata[j].angle)-2000,0, ldata[j].dist *cos(ldata[j].angle)), "laser");
-	cTarget.activeSub=true;
+	cTarget.isActiveSubtarget = true;
 	break;
       }
   }
@@ -295,25 +382,69 @@ void SpecificWorker::createSubTarget()
   
 }
 
-
-
-float SpecificWorker::go(const TargetPose &target)
+void SpecificWorker::stopRobot()
 {
- qDebug()<<"GO";
- //primeraVez=true;
- cTarget.target = QVec::vec3(target.x, target.y, target.z);
- cTarget.activeT = true;
- state.state = "WORKING";
+	try
+	{
+			differentialrobot_proxy->setSpeedBase(0,0);
+	}
+	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 }
+
+void SpecificWorker::drawTarget(const QVec &target)
+{
+  InnerModelDraw::addPlane_ignoreExisting(innerViewer, "target", "world", QVec::vec3(target(0), 100, target(2)), QVec::vec3(1,0,0), "#009900", QVec::vec3(100,100,100));
+}
+void SpecificWorker::undrawTarget(const QString& name)
+{
+	InnerModelDraw::removeNode(innerViewer, name);
+}
+/////////////////////////////////////////7
+///////  Interfaz implementation
+/////////////////////////////////////////777
+
 
 NavState SpecificWorker::getState()
 {
-  return state;
+  return nState;
 }
 
+
+float SpecificWorker::goBackwards(const TargetPose &target)
+{
+	return 0;
+}
+
+
+float SpecificWorker::goReferenced(const TargetPose &target, const float xRef, const float zRef, const float threshold)
+{
+	return 0;
+}
+
+float SpecificWorker::changeTarget(const TargetPose &target)
+{
+	return 0;
+}
+
+float SpecificWorker::go(const TargetPose &target)
+{
+	cTarget.target = QVec::vec3(target.x, target.y, target.z);
+	cTarget.isActiveTarget = true;
+	qDebug()<< __FUNCTION__ <<"ICE::GO" << cTarget.target;
+	
+	state = State::WORKING;
+	drawTarget(cTarget.target);
+	return (inner->transform("world","robot") - cTarget.target).norm2();	//Distance to target in mm
+}
+
+void SpecificWorker::mapBasedTarget(const NavigationParameterMap &parameters)
+{
+
+}
 
 
 void SpecificWorker::stop()
 {
-
+	cTarget.isActiveTarget = true;
+	stopRobot();
 }
