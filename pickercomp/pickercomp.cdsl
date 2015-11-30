@@ -1,0 +1,13 @@
+import "/robocomp/interfaces/IDSLs/RCISMousePicker.idsl";
+import "/robocomp/interfaces/IDSLs/TrajectoryRobot2D.idsl";
+
+Component PickerComp
+{
+	Communications
+	{
+		requires TrajectoryRobot2D;
+		subscribesTo RCISMousePicker;
+	};
+	language Cpp;
+};
+

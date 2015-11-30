@@ -59,6 +59,7 @@ private:
 	  QVec target, subTarget;
 		float rot;
 	  bool isActiveTarget=false, isActiveSubtarget=false;
+		
 	} currentTarget;
 
 	RoboCompTrajectoryRobot2D::NavState nState;
@@ -77,6 +78,9 @@ private:
 	void stopRobot();
 	void drawTarget(const QVec& target);
 	void undrawTarget(const QString &name);
+	void turn();
+	RoboCompTrajectoryRobot2D::NavState toMiddleware();
+	QTime elapsedTime;
 	
 	enum class State  {INIT, IDLE, WORKING, FINISH, TURN};
 	State state = State::INIT;
