@@ -1,0 +1,308 @@
+<!-- Aqui hay bastantes modelos 3D bajo Creative Commons http://3dmodels.katorlegaz.com/ -->
+
+<innerModel>
+	<transform id="world">
+
+<!--		<transform id="worldaxis">
+			<plane id="worldx" px="250" nx="1" size="5,5,500" repeat="1" texture="#ff0000" />
+			<plane id="worldy" py="250" nx="1" size="5,500,5" repeat="1" texture="#00ff00" />
+			<plane id="worldz" pz="250" nx="1" size="500,5,5" repeat="1" texture="#0000ff" />
+		</transform>
+-->
+		<!--<transform id="b_t" tx="8500" tz="-2300" ty="0">
+			<mesh id="b" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/Alicudi.3ds" rx="1.57" rz="-1.57" scale="1000,1000,1000"  />
+		</transform>-->
+
+
+		<transform id="floor">
+			<!-- Left wall of the hallway -->
+			<transform id="T_Wall_0" tx="100" tz="-1400">
+				<plane id="P_Wall_0" py="1500" nx="1" size="2800,3000,200" texture="#666672" />
+			</transform>
+			<!-- Door out -->
+			<transform id="T_Door_0" tx="700" tz="-100">
+				<plane id="P_Door_0" py="2700" nz="1" size="1000,600,200" texture="#666672" />
+				<plane id="P_Door_0d" py="1200" nz="1" size="1000,-2400,100" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/door_entree.png" />
+				<transform id="door_camera" tz="200" ty="2550" rx="1">
+					<plane id="door_camera_plane" nz="1" pz="0" size="80,60" repeat="1" texture="#0000ff" />
+				<!--	<rgbd id="door_rgbd" focal="525" width="640" height="480" port="10097" ifconfig="20000,10004" />-->
+				</transform>
+			</transform>
+			<!-- Large wall at the top -->
+			<transform id="T_Wall_1" tx="5500" tz="-100">
+				<plane id="P_Wall_1" py="1500" nz="1" size="8600,3000,200" texture="#666672" />
+			</transform>
+			<!-- Rightmost wall of the bathroom -->
+			<transform id="T_Wall_2" tx="1900" tz="-1300">
+				<plane id="P_Wall_2" py="1500" nx="1" size="2600,3000,200" texture="#666672" />
+			</transform>
+			<!-- Leftmost wall of the bathroom -->
+			<transform id="T_Wall_3" tx="5300" tz="-1300">
+				<plane id="P_Wall_3" py="1500" nx="1" size="2600,3000,200" texture="#666672" />
+			</transform>
+			<!-- Rightmost wall of the apartment -->
+			<transform id="T_Wall_4" tx="9700" tz="-2000">
+				<plane id="P_Wall_4" py="1500" nx="1" size="4000,3000,200" texture="#666672" />
+			</transform>
+			<!-- Leftmost center wall of the apartment -->
+			<transform id="T_Wall_5" tx="100" tz="-4150">
+				<plane id="P_Wall_5" py="1500" nx="1" size="3100,3000,200" texture="#666672" />
+			</transform>
+			<!-- Left sides of the hallway gate -->
+			<transform id="T_Wall_6" tx="200" tz="-2700">
+				<plane id="P_Wall_6" py="1500" nz="1" size="400,3000,200" texture="#666672" />
+			</transform>
+			<!-- Right side of the hallway gate and left wall of the bottom of the bathroom -->
+			<transform id="T_Wall_7" tx="2300" tz="-2700">
+				<plane id="P_Wall_7" py="1500" nz="1" size="1400,3000,200" texture="#666672" />
+			</transform>
+			<!-- bathroom's door -->
+			<transform id="T_Door_1" tx="3500" tz="-2700">
+				<plane id="P_Door_1" py="2700" nz="1" size="1000,600,200" texture="#666672" />
+				<plane id="P_Door_1d" py="1200" nz="1" size="1000,-2400,100" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/door_entree.png" />
+			</transform>
+			<!-- Right side of the wall of the bottom of the bathroom -->
+			<transform id="T_Wall_8" tx="4700" tz="-2700">
+				<plane id="P_Wall_8" py="1500" nz="1" size="1400,3000,200" texture="#666672" />
+			</transform>
+			<!-- Right side of the wall of the bottom of the bathroom -->
+			<transform id="T_Wall_9" tx="5900" tz="-3900">
+				<plane id="P_Wall_9" py="1500" nz="1" size="3400,3000,200" texture="#666672" />
+			</transform>
+			<!-- big window  of the bedroom -->
+			<transform id="T_Window_0" tx="8600" tz="-3900">
+				<plane id="P_Window_0b" py="2800" nz="1" size="2000,400,200" texture="#666672" />
+				<mesh id="M_Window_0c" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/windowC.3ds" ry="1.57" rz="1.57" tx="1020" ty="1300" scale="36.7,30,93"  />
+			</transform>
+			<!-- left-top wall of the kitchen -->
+			<transform id="T_Wall_10" tx="4300" tz="-4200">
+				<plane id="P_Wall_10" py="1500" nx="1" size="800,3000,200" texture="#666672" />
+			</transform>
+			<!-- right-top wall of the kitchen -->
+			<transform id="T_Wall_11" tx="7500" tz="-4200">
+				<plane id="P_Wall_11" py="1500" nx="1" size="800,3000,200" texture="#666672" />
+			</transform>
+			<!-- window  of the kitchen -->
+			<transform id="T_Window_1" tx="7500" tz="-5100">
+				<plane id="P_Window_1a" py="500"  nx="1" size="1000,1000,200" texture="#666672" />
+				<plane id="P_Window_1b" py="2800" nx="1" size="1000,400,200" texture="#666672" />
+			</transform>
+			<!-- right wall of the kitchen and dining room -->
+			<transform id="T_Wall_12" tx="7500" tz="-6200">
+				<plane id="P_Wall_12" py="1500" nx="1" size="1200,3000,200" texture="#666672" />
+			</transform>
+			<!-- big window  of the living room to the outside -->
+			<transform id="T_Window_2" tx="100" tz="-7150">
+				<!--<plane id="P_Window_2a" py="500"  nx="1" size="1000,1000,200" texture="#666672" />-->
+				<plane id="P_Window_2b" py="2800" nx="1" size="2900,400,200" texture="#666672" />
+				<mesh id="M_Window_2c" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/3dm-window1.3ds" rx="1.57" rz="-1.57" ty="-20" scale="41.5,10,44"  />
+			</transform>
+			<!-- window of the dining room -->
+			<transform id="T_Window_3" tx="7500" tz="-7500">
+				<plane id="P_Window_3a" py="500"  nx="1" size="1400,1000,200" texture="#666672" />
+				<plane id="P_Window_3b" py="2800" nx="1" size="1400,400,200" texture="#666672" />
+			</transform>
+			<!-- right wall at the bottom of the dining room -->
+			<transform id="T_Wall_13" tx="7500" tz="-9100">
+				<plane id="P_Wall_13" py="1500" nx="1" size="1800,3000,200" texture="#666672" />
+			</transform>
+			<!-- intersection of the two windows of the living room -->
+			<transform id="T_Wall_14" tx="100" tz="-8700">
+				<plane id="P_Wall_14" py="1500" nx="1" size="200,3000,200" texture="#666672" />
+			</transform>
+			<!-- big window  of the living room to the patio -->
+			<transform id="T_Window_4" tx="2200" tz="-8700">
+				<!--<plane id="P_Window_4a" py="500"  nx="1" size="1000,1000,200" texture="#666672" />-->
+				<plane id="P_Window_4b" py="2800" nz="1" size="4000,400,200" texture="#666672" />
+				<mesh id="M_Window_4c" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/3dm-window1.3ds" rx="1.57" ty="-20" scale="56,10,44"  />
+			</transform>
+			<!-- intersection of the living room, patio and dining room -->
+			<transform id="T_Wall_15" tx="4300" tz="-8700">
+				<plane id="P_Wall_15" py="1500" nx="1" size="200,3000,200" texture="#666672" />
+			</transform>
+			<!-- patio's door -->
+			<transform id="T_Door_2" tx="4300" tz="-9300">
+				<plane id="P_Door_2" py="2700" nx="1" size="1000,600,200" texture="#666672" />
+				<plane id="P_Door_2d" py="1200" nx="1" size="1000,-2400,100" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/door_entree.png" />
+			</transform>
+			<!-- bottom of the dining room -->
+			<transform id="T_Wall_16" tx="5900" tz="-9900">
+				<plane id="P_Wall_16" py="1500" nz="1" size="3400,3000,200" texture="#666672" />
+			</transform>
+			<!-- left wall of the patio -->
+			<transform id="T_Wall_17" tx="100" tz="-9800">
+				<plane id="P_Wall_17" py="750" nx="1" size="2400,1500,200" texture="#666672" />
+			</transform>
+			<!-- right wall of the patio -->
+			<transform id="T_Wall_18" tx="4300" tz="-10400">
+				<plane id="P_Wall_18" py="750" nx="1" size="1200,1500,200" texture="#666672" />
+			</transform>
+			<!-- bottom wall of the patio -->
+			<transform id="T_Wall_19" tx="2200" tz="-10900">
+				<plane id="P_Wall_19" py="750" nz="1" size="4400,1500,200" texture="#666672" />
+			</transform>
+
+			<transform id="floor_meshes_y" ty="-8">
+				<plane id="nope" ny="1" px="4500" pz="-4500" size="15000,15000,6" texture="#443333" />
+				<transform id="T_Floor_Bathroom" tx="3600" tz="-1400">
+					<plane id="P_Floor_Bathroom_0" ny="1" size="3400,2600,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/bathroom.png" />
+				</transform>
+				<transform id="T_Floor_Hallway" tx="1000" tz="-1400">
+					<plane id="P_Floor_Hallway_0" ny="1" size="1800,2600,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/hallway.png" />
+				</transform>
+				<transform id="T_Floor_LivingRoom">
+					<plane id="P_Floor_LivingRoom_0" px="2700" pz="-3300" ny="1" size="5200,1200,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/living1.png" />
+					<plane id="P_Floor_LivingRoom_1" px="2200" pz="-6300" ny="1" size="4200,4800,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/living2.png" />
+				</transform>
+
+				<transform id="T_Floor_KitchenDining" tx="5900" tz="-6900">
+					<plane id="P_Floor_KitchenDining_0" ny="1" size="3200,6000,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/kitchendining.png" />
+				</transform>
+
+				<transform id="T_Floor_Bedroom" tx="7500" tz="-2000">
+					<plane id="P_Floor_Bedroom_0" ny="1" size="4400,3800,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/bedroom.png" />
+				</transform>
+				<transform id="T_Floor_Patio" tx="2200" tz="-9800">
+					<plane id="P_Floor_Patio_0" ny="1" size="4200,2200,20" texture="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/grass.png" />
+				</transform>
+			</transform>
+
+			<transform id="mesanoche1_t" tx="9400" tz="-1200">
+				<mesh id="mesanoche1" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/mesa_centro_larga.osg" rx="1.57" scale="29,58,200"  />
+			</transform>
+			<transform id="mesanoche2_t" tx="9400" tz="-3400">
+				<mesh id="mesanoche2" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/mesa_centro_larga.osg" rx="1.57" scale="29,58,200"  />
+			</transform>
+			<transform id="macetero1_t" tx="4000" tz="-4500" ty="70">
+				<mesh id="macetero1" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/macetero.osg" rx="1.57" rz="-1.57" scale="7,7,7"  />
+			</transform>
+			<transform id="macetero2_t" tx="9600" tz="-600" ty="70">
+				<mesh id="macetero2" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/macetero.osg" rx="1.57" scale="7,7,7"  />
+			</transform>
+			<transform id="torchere_1_t" tx="500" tz="-5400">
+				<mesh id="torchere1" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/Torchere 2.3DS"  rx="1.57" rz="1.57"  scale="1,1,1"  />
+			</transform>
+			<transform id="torchere_2_t" tx="4200" tz="-8300">
+				<mesh id="torchere2" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/Torchere 2.3DS"  rx="1.57" rz="1.57"  scale="1,1,1"  />
+			</transform>
+			<transform id="dinin_table_t" tx="6400" tz="-7700" ry="1.57">
+				<mesh id="dinin_table" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/tablerigid.3ds" rx="1.57" rz="1.57" scale="200,200,200"  />
+			</transform>
+			<transform id="k_t" tx="5600" tz="-4300" ty="0">
+		<!--		<mesh id="k" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/komplekt5.3DS" rx="1.57" scale="6.6,9,9"  />
+		-->		<transform id="mugT" tz="-120" ty="900" tx="-200">
+					<plane id="mugTag" ny="1" size="71.25,71.25,5" repeat="1" texture="/home/robocomp/robocomp/files/innermodel/tar36h11-11.png" />
+					<transform id="axesh1" >
+					<plane id="xh1" px="50" nx="1" size="1,1,150" repeat="1" texture="#ff0000" />
+					<plane id="yh1" py="50" nx="1" size="1,150,1" repeat="1" texture="#00ff00" />
+					<plane id="zh1" pz="50" nx="1" size="150,1,1" repeat="1" texture="#0000ff" />
+				</transform>
+			</transform>
+			</transform>
+		<!--	<transform id="sofa0_t" tx="1800" tz="-7600">
+				<mesh id="sofa0" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/Armchair N260414.3DS" rx="1.57" rz="1.57"  scale="20,20,20"  />
+			</transform>
+	 	--><!--	<transform id="sofa1_t" tx="1800" tz="-5200">
+				<mesh id="sofa1" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/Armchair N260414.3DS" rx="1.57" rz="-1.57" scale="20,20,20"  />
+			</transform>
+			--><transform id="sofaAA_t" tx="3100" tz="-6300" >
+<!-- 				<mesh id="sofaAA" file="/home/robocomp/robocomp/components/robocomp-ursus-rockin/files/RoCKIn@home/world/titanik.3DS" rx="1.57" rz="3.14" scale="8,6.5,6"  /> -->
+			</transform>
+
+		</transform>
+
+		<transform id="caja1" tx="3500" tz="-6000" ty="200" >
+			<plane id="cajaMesh1" nx="1" size="1000,400,400"  texture="/home/robocomp/robocomp/files/osgModels/textures/Metal.jpg" />
+ 		</transform>
+		
+
+		<!-- Base		 -->
+			<differentialrobot id="robot" port="10004" >
+
+ 				<translation id="laserPose" tx="0" ty="240" tz="100">
+ 					<laser id="laser" port="10003" measures="50" min="100" max="8000" angle="4" ifconfig="10000" />
+<!--  					<plane id="sensorL" nz="1" pz="-200" size="100" repeat="1" texture="#ff0000" /> -->
+ 				</translation>
+				<mesh id="base_mesh" file="/home/robocomp/robocomp/files/osgModels/robex/robex.ive"  tx="0" ty="10" tz="0" scale="1000"  />
+			</differentialrobot> <!--base -->
+
+
+
+<!--
+		<transform id="axesWorld" >
+			<plane id="xWorld" px="250" nx="1" size="30,30,1000" repeat="1" texture="#ff0000" />
+			<plane id="yWorld" py="250" nx="1" size="30,1000,30" repeat="1" texture="#00ff00" />
+			<plane id="zWorld" pz="250" nx="1" size="1000,30,30" repeat="1" texture="#0000ff" />
+		</transform>
+
+			<transform id="axes_y" ty="3200">
+				<transform id="axes" tz="-5700">
+					<plane id="xWorlds" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes1" tz="-2800">
+					<plane id="xWorlds1" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds1" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds1" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes2" tx="1600" tz="-2800">
+					<plane id="xWorlds2" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds2" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds2" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes3" tx="5400" tz="-2800">
+					<plane id="xWorlds3" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds3" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds3" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes5" tx="4200" tz="-3800">
+					<plane id="xWorlds5" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds5" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds5" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes6" tx="7600" tz="-3800">
+					<plane id="xWorlds6" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds6" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds6" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes7" tx="7600" tz="-5600">
+					<plane id="xWorlds7" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds7" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds7" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes8" tx="7600" tz="-6800">
+					<plane id="xWorlds8" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds8" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds8" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes9" tx="7600" tz="-8200">
+					<plane id="xWorlds9" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds9" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds9" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes10" tx="7600" tz="-9800">
+					<plane id="xWorlds10" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds10" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds10" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes11" tx="0" tz="-8800">
+					<plane id="xWorlds11" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds11" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds11" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+				<transform id="axes12" tx="7600" tz="-9800">
+					<plane id="xWorlds12" px="250" nx="1" size="10,10,1000" repeat="1" texture="#ff0000" />
+					<plane id="yWorlds12" py="250" nx="1" size="10,1000,10" repeat="1" texture="#00ff00" />
+					<plane id="zWorlds12" pz="250" nx="1" size="1000,10,10" repeat="1" texture="#0000ff" />
+				</transform>
+			</transform>
+
+
+-->
+
+
+
+	</transform>
+
+</innerModel>
