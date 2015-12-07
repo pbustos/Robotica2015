@@ -76,7 +76,7 @@ private:
 	bool atTarget();
 	void histogram();
 	void stopRobot();
-	void drawTarget(const QVec& target);
+	void drawTarget(const QString &name, const QVec& target, const QString &color="#009900");
 	void undrawTarget(const QString &name);
 	void turn();
 	RoboCompTrajectoryRobot2D::NavState toMiddleware();
