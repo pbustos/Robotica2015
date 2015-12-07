@@ -29,34 +29,7 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 		inner = new InnerModel(innerFile.toStdString());
 	else	
 		qFatal("InnerModel file not found");
-		
-	//Set odometry for initial robot TargetPose
-// 	try
-// 	{
-// 		differentialrobot_proxy->getBaseState(bState);
-// 		qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
-// 		try
-// 		{
-// 			inner->transform("world",QVec::zeros(6),"initialRobotPose");
-// 			if( bState.x == 0 and bState.z == 0 )	//RCIS just initiated. We change robot odometry to the initialRobotPose
-// 			{
-// 				QVec rpos = inner->transform("world", QVec::zeros(6),"robot");
-// 				RoboCompDifferentialRobot::TBaseState bs; bs.x=rpos.x(); bs.z=rpos.z();bs.alpha=rpos.ry();
-// 				differentialrobot_proxy->setOdometer(bs);
-// 				qDebug()<< "Robot odometry set to" << rpos;
-// 			}
-// 			else
-// 				inner->updateTransformValues("initialRobotPose", 0,0,0,0,0,0);
-// 		}
-// 		catch(std::exception &ex) {std::cout<<ex.what()<<std::endl;};
-// 	}
-// 	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
-// 	
-	
-	differentialrobot_proxy->getBaseState(bState);
-	qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
-  inner->updateTransformValues("robot", bState.x, 0, bState.z, 0, bState.alpha, 0);	
-	
+			
 	graphicsView->setScene(&scene);
 	graphicsView->show();
 	graphicsView->scale(3,3);
@@ -79,7 +52,6 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 */
 SpecificWorker::~SpecificWorker()
 {
-	
 }
 
 bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
@@ -91,18 +63,11 @@ bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 
 void SpecificWorker::compute()
 {
-    
   try
   {
      differentialrobot_proxy->getBaseState(bState);
-		 //qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
      ldata = laser_proxy->getLaserData();
-     //TLaserData ldataR(ldata.rbegin(), ldata.rend());
-     //ldata = ldataR;
      inner->updateTransformValues("robot", bState.x, 0, bState.z, 0, bState.alpha, 0);
-// 		 qDebug() << __FUNCTION__<< bState.x << bState.z << bState.alpha;
-//      qDebug() << __FUNCTION__<< inner->transform("world","robot");
-		 
 	
 		 switch( state )
 		 {
@@ -124,14 +89,14 @@ void SpecificWorker::compute()
 					{
 						goToTarget(); 
 					}
-//  					else if(cTarget.isActiveSubtarget == true)
-//  					{
-//  						goToSubTarget(); 
-//  					}
-//  					else
-//  					{
-//  						createSubTarget();
-//  					}
+ 					else if(cTarget.isActiveSubtarget == true)
+ 					{
+ 						goToSubTarget(); 
+ 					}
+ 					else
+ 					{
+ 						createSubTarget();
+ 					}
  					break;
 					
 			 case State::TURN:
@@ -305,10 +270,9 @@ void SpecificWorker::goToTarget()
  void SpecificWorker::turn()
 {
 	float alpha;
-	QVec t;
-		 
- 	t = inner->transform("robot", cTarget.target, "world");
+	QVec t = inner->transform("robot", cTarget.target, "world");
 	alpha =atan2(t.x(), t.z() );
+	
 	if( alpha <= ldata.front().angle and alpha >= ldata. back().angle)
 	{
 		stopRobot();
@@ -369,28 +333,34 @@ void SpecificWorker::createSubTarget()
 	{
 		if( (ldata[i].dist - ldata[i-1].dist) < -R )
 		{
-			int k=i-2;
-			while( (k > 0) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle)) < R ))
-			{ k--; }
+			int k=i-1;
+			while( (k > 0) and (fabs( ldata[i].dist*sin(ldata[k].angle - ldata[i].angle)) < R*1.2 ))
+			{ 
+				qDebug() << "arco" << fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle));
+				k--; }
 			i=k;
 			break;
 		}
 	}
+	//search now the left side
 	for(j=(int)ldata.size()/2; j<(int)ldata.size()-2; j++)
 	{
 		if( (ldata[j].dist - ldata[j+1].dist) < -R )
 		{
-			int k=j+2;
-			while( (k < (int)ldata.size()-1) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[j+1].angle)) < R ))
+			int k=j+1;
+			while( (k < (int)ldata.size()-1) and (fabs( ldata[j].dist*sin(ldata[k].angle - ldata[j].angle)) < R*1.2 ))
 			{ k++; }
 			j=k;
 			break;
 		}
 	}
  
-	//Select i or j
-	
-	cTarget.subTarget=inner->laserTo ("world", "laser", ldata[i].dist-2000,ldata[i].angle);
+	//Select i or j, the closest one
+	if( fabs(ldata[i].angle - alpha) < fabs(ldata[j].angle - alpha) )
+		cTarget.subTarget=inner->laserTo ("world", "laser", ldata[i].dist-2000,ldata[i].angle);
+	else
+		cTarget.subTarget=inner->laserTo ("world", "laser", ldata[j].dist-2000,ldata[j].angle);
+		
 	drawTarget("subTarget",cTarget.subTarget,"#000099");
 	cTarget.isActiveSubtarget = true;
   qDebug()<<  __FUNCTION__<< "Subtarget" << cTarget.subTarget;
