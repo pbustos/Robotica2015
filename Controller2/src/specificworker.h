@@ -31,6 +31,8 @@
 #include <osgviewer/osgview.h>
 #include <innermodel/innermodelviewer.h>
 #include <innermodel/innermodeldraw.h>
+#include "currenttarget.h"
+#include "waypoints.h"
 
 class SpecificWorker : public GenericWorker
 {
@@ -52,24 +54,15 @@ public:
 
 public slots:
 	void compute(); 	
-	void stopSlot() { stopRobot(); };
 
 private:
-	typedef struct
-	{
-	  QVec target, subTarget;
-		float rot;
-	  bool isActiveTarget=false, isActiveSubtarget=false;
-		
-	} currentTarget;
 
 	RoboCompTrajectoryRobot2D::NavState nState;
 	InnerModel* inner;
 	TLaserData ldata, ldataR;
 	TBaseState bState;
-	currentTarget cTarget;
+	CurrentTarget cTarget;
 	QGraphicsScene scene;
-  float LASER_MAX;
 	
 	void createSubTarget();
 	void goToSubTarget();
@@ -82,8 +75,6 @@ private:
 	void undrawTarget(const QString &name);
 	void turn();
 	RoboCompTrajectoryRobot2D::NavState toMiddleware();
-	bool thereIsATubeToTarget(int i, const QVec& targetInRobot, float alpha);
-	bool inLaserField(const QVec& pointInRobot);
 	QTime elapsedTime;
 	
 	enum class State  {INIT, IDLE, WORKING, FINISH, TURN};
@@ -91,6 +82,8 @@ private:
 	
 	OsgView *osgView;
 	InnerModelViewer *innerViewer;
+	
+	WayPoints road;
 };
 
 #endif
