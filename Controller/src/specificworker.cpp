@@ -266,11 +266,11 @@ bool SpecificWorker::freeWay()
 			}
      }
   }
-  //if(cTarget.isActiveSubtarget == false)
-	//{
+  if(cTarget.isActiveSubtarget == false)
+	{
 		qDebug() << "The target is behind. I should turn around";
 		state = State::TURN;
-	//}
+	}
   return false;
 }
 
@@ -283,11 +283,20 @@ bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, floa
 {
 	const int ROBOT_RADIUS = 200;  //READ FROM XML
 	QList<QVec> lPoints;
-	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,ROBOT_RADIUS));  //between A and B
-	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,-ROBOT_RADIUS)); //betweeen B and C
-	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,-ROBOT_RADIUS));		//between C and D
-	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,ROBOT_RADIUS));		//between C and D
-
+	
+	//points on the corners of thw square
+	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,ROBOT_RADIUS)); 
+	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,-ROBOT_RADIUS)); 
+	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,-ROBOT_RADIUS));
+	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,ROBOT_RADIUS));
+	
+	//points on the sides
+	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,0));
+	lPoints.append( QVec::vec3(0,0,-ROBOT_RADIUS));
+	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,0));
+	lPoints.append( QVec::vec3(0,0, ROBOT_RADIUS));
+	
+	
 	float dist = targetInRobot.norm2();
 	float step = ceil(dist/ (ROBOT_RADIUS/3));
 	QVec tNorm = targetInRobot.normalize();
@@ -414,6 +423,9 @@ void SpecificWorker::goToSubTarget()
     }
     qDebug() <<  __FUNCTION__<< "subtarget"<< d << r;
 }
+
+/// ATENCIÓN, este método tiene que ser mejorado. Tal y como está puede seleccionar subtargets al otro lado de una pared.
+/// habría que analizar mejor el histograma laser para buscar "huecos" cercanos al target, no solo escalones.
 
 void SpecificWorker::createSubTarget()
 {
