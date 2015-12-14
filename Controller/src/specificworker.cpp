@@ -1,20 +1,20 @@
 /*
- *    Copyright (C) 2015 by YOUR NAME HERE
+ *    Copyright (C) 2015 by YOUROBOT_SIZE NAME HEROBOT_SIZEE
  *
- *    This file is part of RoboComp
+ *    This file is part of ROBOT_SIZEoboComp
  *
- *    RoboComp is free software: you can redistribute it and/or modify
+ *    ROBOT_SIZEoboComp is free software: you can redistribute it and/or modify
  *    it under the terms of the GNU General Public License as published by
  *    the Free Software Foundation, either version 3 of the License, or
  *    (at your option) any later version.
  *
- *    RoboComp is distributed in the hope that it will be useful,
- *    but WITHOUT ANY WARRANTY; without even the implied warranty of
- *    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *    ROBOT_SIZEoboComp is distributed in the hope that it will be useful,
+ *    but WITHOUT ANY WAROBOT_SIZEROBOT_SIZEANTY; without even the implied warranty of
+ *    MEROBOT_SIZECHANTABILITY or FITNESS FOROBOT_SIZE A PAROBOT_SIZETICULAROBOT_SIZE PUROBOT_SIZEPOSE.  See the
  *    GNU General Public License for more details.
  *
  *    You should have received a copy of the GNU General Public License
- *    along with RoboComp.  If not, see <http://www.gnu.org/licenses/>.
+ *    along with ROBOT_SIZEoboComp.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include "specificworker.h"
 
@@ -144,7 +144,6 @@ void SpecificWorker::histogram()
 {
 	static QGraphicsPolygonItem *p;
 	static QGraphicsLineItem *l, *sr, *sl, *safety, *st=nullptr;
-	const float R = 400; //Robot radius
 	const float SAFETY = 600;
 
 	scene.removeItem(p);
@@ -158,10 +157,10 @@ void SpecificWorker::histogram()
 	int i,j;
 	for(i=(int)ldata.size()/2; i>1; i--)
 	{
-		if( (ldata[i].dist - ldata[i-1].dist) < -R )
+		if( (ldata[i].dist - ldata[i-1].dist) < -ROBOT_SIZE )
 		{
 			int k=i-2;
-			while( (k > 0) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle)) < R ))
+			while( (k > 0) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[i-1].angle)) < ROBOT_SIZE ))
 			{ k--; }
 			i=k;
 			break;
@@ -169,10 +168,10 @@ void SpecificWorker::histogram()
 	}
 	for(j=(int)ldata.size()/2; j<(int)ldata.size()-2; j++)
 	{
-		if( (ldata[j].dist - ldata[j+1].dist) < -R )
+		if( (ldata[j].dist - ldata[j+1].dist) < -ROBOT_SIZE )
 		{
 			int k=j+2;
-			while( (k < (int)ldata.size()-1) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[j+1].angle)) < R ))
+			while( (k < (int)ldata.size()-1) and (fabs( ldata[k].dist*sin(ldata[k].angle - ldata[j+1].angle)) < ROBOT_SIZE ))
 			{ k++; }
 			j=k;
 			break;
@@ -193,7 +192,7 @@ void SpecificWorker::histogram()
 // 			}
 // 	}
 	
-	//DRAW		
+	//DROBOT_SIZEAW		
 	QPolygonF poly;
 	int x=0;
 	poly << QPointF(0, 0);
@@ -235,7 +234,7 @@ bool SpecificWorker::atTarget()
 }
 
 /**
- * @brief Checks if there is a free way from robot position to target
+ * @brief Checks if there is a free way from robot position to target or 1000mm ahead
  * 
  * @return bool
  */
@@ -248,6 +247,19 @@ bool SpecificWorker::freeWay()
 	qDebug()<< "---------------------------";
   qDebug()<< __FUNCTION__<< "target " << t << "distancia: " << d;
   
+	
+	///CHECK if TOO CLOSE AND STOP
+	
+	if(alpha > ldata.front().angle or alpha < ldata.back().angle)
+	{
+	  if(cTarget.isActiveSubtarget == false)
+		{
+			qDebug() << "The target is behind. I should turn around";
+			state = State::TURN;
+		}	
+		return false;
+	}
+	
 	for(uint i = 0; i<ldata.size(); i++)
   {
 		if(ldata[i].angle <= alpha)
@@ -266,12 +278,6 @@ bool SpecificWorker::freeWay()
 			}
      }
   }
-  if(cTarget.isActiveSubtarget == false)
-	{
-		qDebug() << "The target is behind. I should turn around";
-		state = State::TURN;
-	}
-  return false;
 }
 
 /**
@@ -281,7 +287,6 @@ bool SpecificWorker::freeWay()
  */
 bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, float alpha )
 {
-	const int ROBOT_RADIUS = 200;  //READ FROM XML
 	QList<QVec> lPoints;
 	
 	//points on the corners of thw square
@@ -298,11 +303,14 @@ bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, floa
 	
 	
 	float dist = targetInRobot.norm2();
-	float step = ceil(dist/ (ROBOT_RADIUS/3));
+	if( dist > 1500) dist = 1500;	//TESTING 
+	
+	float step = ceil(dist/ (ROBOT_SIZE/3));
 	QVec tNorm = targetInRobot.normalize();
 	
 	QVec r;
 	inner->updateTransformValues ("vbox",0, 0, 0, 0, 0, 0, "robot");	
+	
 	for(float landa=400; landa<=dist; landa+=step)
 	{
 		r = tNorm * landa;
@@ -357,7 +365,7 @@ void SpecificWorker::goToTarget()
   float d = 0.3*distToTarget;
 	/*if( fabs(r) > 0.2 and distToTarget> 400) d = 0;
  */ 
-	if(d>300) d=300;
+	if(d>500) d=500;
 	
 	qDebug()<< "---------------------------";
 	qDebug() << __FUNCTION__ << t << "rot" << r << "adv" << d;
@@ -390,7 +398,7 @@ void SpecificWorker::goToTarget()
 		if( alpha > ldata.front().angle )  // turn right
 			try{ differentialrobot_proxy->setSpeedBase(0, fabs(alpha));}
 			catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;}
-		else															// turn left
+		else if( alpha < ldata.back().angle ) 															// turn left
 			try{ differentialrobot_proxy->setSpeedBase(0, -fabs(alpha));}
 			catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 	}
@@ -433,16 +441,17 @@ void SpecificWorker::createSubTarget()
   
   QVec t = inner->transform("laser", cTarget.target, "world");
   float alpha =atan2(t.x(), t.z() );
-	const float R = 400.f;
-    
+
 	//Search the first increasing step from the center to the right
 	int i,j;
+	float di=0,dj=0;
 	for(i=(int)ldata.size()/2; i>1; i--)
 	{
-		if( (ldata[i].dist - ldata[i-1].dist) < -R )
+		if( (ldata[i].dist - ldata[i-1].dist) < -ROBOT_SIZE )
 		{
 			int k=i-1;
-			while( (k > 0) and (fabs( ldata[i].dist*sin(ldata[k].angle - ldata[i].angle)) < R*1.2 ))
+			di = ldata[i].dist;
+			while( (k > 0) and (fabs( ldata[i].dist*sin(ldata[k].angle - ldata[i].angle)) < ROBOT_SIZE*1.2 ))
 			{ 
 				k--; }
 			i=k;
@@ -452,10 +461,61 @@ void SpecificWorker::createSubTarget()
 	//search now the left side
 	for(j=(int)ldata.size()/2; j<(int)ldata.size()-2; j++)
 	{
-		if( (ldata[j].dist - ldata[j+1].dist) < -R )
+		if( (ldata[j].dist - ldata[j+1].dist) < -ROBOT_SIZE )
 		{
 			int k=j+1;
-			while( (k < (int)ldata.size()-1) and (fabs( ldata[j].dist*sin(ldata[k].angle - ldata[j].angle)) < R*1.2 ))
+			dj = ldata[j].dist;
+			while( (k < (int)ldata.size()-1) and (fabs( ldata[j].dist*sin(ldata[k].angle - ldata[j].angle)) < ROBOT_SIZE*1.2 ))
+			{ k++; }
+			j=k;
+			break;
+		}
+	}
+ 
+	//Select i or j, the closest one
+	//TODO CHECK that the subtarget is inside the laserfield.
+	if( fabs(ldata[i].angle - alpha) < fabs(ldata[j].angle - alpha) )
+		cTarget.subTarget=inner->laserTo ("world", "laser", di,ldata[i].angle);
+	else
+		cTarget.subTarget=inner->laserTo ("world", "laser", dj,ldata[j].angle);
+		
+	drawTarget("subTarget",cTarget.subTarget,"#ff0000");
+	cTarget.isActiveSubtarget = true;
+  qDebug()<<  __FUNCTION__<< "Subtarget" << cTarget.subTarget;
+  
+}
+
+void SpecificWorker::createSubTarget2()
+{
+  qDebug() <<  __FUNCTION__;
+  
+  QVec t = inner->transform("laser", cTarget.target, "world");
+  float alpha = atan2(t.x(), t.z() );
+    
+	// We look for all viable tunnels and put them in a list 
+	// A tunnel is defined as an angular window wide enough for the robot and longer than the minimun distance 
+	// for the robot to stop, given its maximun decceleration.
+	
+	int i,j;
+	for(i=(int)ldata.size()/2; i>1; i--)
+	{
+		if( (ldata[i].dist - ldata[i-1].dist) < -ROBOT_SIZE )
+		{
+			int k=i-1;
+			while( (k > 0) and (fabs( ldata[i].dist*sin(ldata[k].angle - ldata[i].angle)) < ROBOT_SIZE*1.2 ))
+			{ 
+				k--; }
+			i=k;
+			break;
+		}
+	}
+	//search now the left side
+	for(j=(int)ldata.size()/2; j<(int)ldata.size()-2; j++)
+	{
+		if( (ldata[j].dist - ldata[j+1].dist) < -ROBOT_SIZE )
+		{
+			int k=j+1;
+			while( (k < (int)ldata.size()-1) and (fabs( ldata[j].dist*sin(ldata[k].angle - ldata[j].angle)) < ROBOT_SIZE*1.2 ))
 			{ k++; }
 			j=k;
 			break;
@@ -473,6 +533,7 @@ void SpecificWorker::createSubTarget()
   qDebug()<<  __FUNCTION__<< "Subtarget" << cTarget.subTarget;
   
 }
+
 
 ////////////////////////
 /// Utilities
@@ -559,7 +620,7 @@ float SpecificWorker::goBackwards(const TargetPose &target)
 }
 
 
-float SpecificWorker::goReferenced(const TargetPose &target, const float xRef, const float zRef, const float threshold)
+float SpecificWorker::goReferenced(const TargetPose &target, const float xROBOT_SIZEef, const float zROBOT_SIZEef, const float threshold)
 {
 	return 0;
 }

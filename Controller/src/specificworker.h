@@ -31,6 +31,10 @@
 #include <osgviewer/osgview.h>
 #include <innermodel/innermodelviewer.h>
 #include <innermodel/innermodeldraw.h>
+//#include "vfh_algorithm.h"
+
+#define ROBOT_SIZE 400.f
+#define ROBOT_RADIUS 200.f
 
 class SpecificWorker : public GenericWorker
 {
@@ -85,12 +89,16 @@ private:
 	bool thereIsATubeToTarget(int i, const QVec& targetInRobot, float alpha);
 	bool inLaserField(const QVec& pointInRobot);
 	QTime elapsedTime;
+	void createSubTarget2();
 	
 	enum class State  {INIT, IDLE, WORKING, FINISH, TURN};
 	State state = State::INIT;
 	
 	OsgView *osgView;
 	InnerModelViewer *innerViewer;
+	
+	//VFH
+	//VFH_Algorithm vfh;
 };
 
 #endif

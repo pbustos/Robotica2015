@@ -3,6 +3,7 @@
 SET ( SOURCES
   specificworker.cpp
   specificmonitor.cpp
+  #vfh_algorithm.cpp
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.cpp
 )
 
@@ -13,7 +14,7 @@ SET ( HEADERS
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.h
 )
 
-INCLUDE($ENV{ROBOCOMP}/cmake/modules/ipp.cmake)
+#INCLUDE($ENV{ROBOCOMP}/cmake/modules/ipp.cmake)
 SET (LIBS ${LIBS} -losgViewer)
 ADD_DEFINITIONS( -std=c++11 )
 
