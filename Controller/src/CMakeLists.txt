@@ -39,9 +39,6 @@ SET ( HEADERS
   specificworker.h
   trajectoryrobot2dI.h
 )
-
-
-
 #ROBOCOMP
 ROBOCOMP_INITIALIZE( $ENV{ROBOCOMP}/ )
 ROBOCOMP_WRAP_ICE( CommonBehavior Laser DifferentialRobot DifferentialRobot TrajectoryRobot2D )

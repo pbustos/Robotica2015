@@ -474,10 +474,20 @@ void SpecificWorker::createSubTarget()
  
 	//Select i or j, the closest one
 	//TODO CHECK that the subtarget is inside the laserfield.
+	
+	
 	if( fabs(ldata[i].angle - alpha) < fabs(ldata[j].angle - alpha) )
+	{
+		if( di > ldata[i].dist) di = ldata[i].dist;
+		if( di > 1000) di = 1000;
 		cTarget.subTarget=inner->laserTo ("world", "laser", di,ldata[i].angle);
+	}
 	else
+	{
+		if( dj > ldata[j].dist) di = ldata[j].dist;
+		if( dj > 1000) dj = 1000;
 		cTarget.subTarget=inner->laserTo ("world", "laser", dj,ldata[j].angle);
+	}
 		
 	drawTarget("subTarget",cTarget.subTarget,"#ff0000");
 	cTarget.isActiveSubtarget = true;

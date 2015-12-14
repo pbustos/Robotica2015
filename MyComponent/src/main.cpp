@@ -83,7 +83,7 @@
 #include <DifferentialRobot.h>
 #include <Laser.h>
 #include <AprilTags.h>
-#include <Controller.h>
+#include <TrajectoryRobot2D.h>
 
 
 // User includes here
@@ -95,7 +95,7 @@ using namespace RoboCompCommonBehavior;
 using namespace RoboCompDifferentialRobot;
 using namespace RoboCompLaser;
 using namespace RoboCompAprilTags;
-using namespace RoboCompController;
+using namespace RoboCompTrajectoryRobot2D;
 
 
 
@@ -128,29 +128,12 @@ int ::MyFirstComp::run(int argc, char* argv[])
 #endif
 	int status=EXIT_SUCCESS;
 
-	ControllerPrx controller_proxy;
 	DifferentialRobotPrx differentialrobot_proxy;
 	LaserPrx laser_proxy;
+	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 
 	string proxy, tmp;
 	initialize();
-
-
-	try
-	{
-		if (not GenericMonitor::configGetString(communicator(), prefix, "ControllerProxy", proxy, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy ControllerProxy\n";
-		}
-		controller_proxy = ControllerPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
-	}
-	catch(const Ice::Exception& ex)
-	{
-		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
-		return EXIT_FAILURE;
-	}
-	rInfo("ControllerProxy initialized Ok!");
-	mprx["ControllerProxy"] = (::IceProxy::Ice::Object*)(&controller_proxy);//Remote server proxy creation example
 
 
 	try
@@ -185,6 +168,23 @@ int ::MyFirstComp::run(int argc, char* argv[])
 	}
 	rInfo("LaserProxy initialized Ok!");
 	mprx["LaserProxy"] = (::IceProxy::Ice::Object*)(&laser_proxy);//Remote server proxy creation example
+
+
+	try
+	{
+		if (not GenericMonitor::configGetString(communicator(), prefix, "TrajectoryRobot2DProxy", proxy, ""))
+		{
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy TrajectoryRobot2DProxy\n";
+		}
+		trajectoryrobot2d_proxy = TrajectoryRobot2DPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
+	}
+	catch(const Ice::Exception& ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
+		return EXIT_FAILURE;
+	}
+	rInfo("TrajectoryRobot2DProxy initialized Ok!");
+	mprx["TrajectoryRobot2DProxy"] = (::IceProxy::Ice::Object*)(&trajectoryrobot2d_proxy);//Remote server proxy creation example
 
 IceStorm::TopicManagerPrx topicManager = IceStorm::TopicManagerPrx::checkedCast(communicator()->propertyToProxy("TopicManager.Proxy"));
 

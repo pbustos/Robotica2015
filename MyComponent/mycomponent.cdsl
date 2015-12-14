@@ -1,11 +1,11 @@
 import "/robocomp/interfaces/IDSLs/DifferentialRobot.idsl";
 import "/robocomp/interfaces/IDSLs/Laser.idsl";
 import "/robocomp/interfaces/IDSLs/AprilTags.idsl";
-import "/robocomp/interfaces/IDSLs/Controller.idsl";
+import "/robocomp/interfaces/IDSLs/TrajectoryRobot2D.idsl";
 
 Component MyFirstComp{
     Communications{
-        requires DifferentialRobot, Laser, Controller;
+        requires DifferentialRobot, Laser, TrajectoryRobot2D;
 	subscribesTo AprilTags;
     };
 gui Qt(QWidget);

@@ -28,8 +28,8 @@
 
 #include <CommonBehavior.h>
 #include <Laser.h>
-#include <Controller.h>
 #include <DifferentialRobot.h>
+#include <TrajectoryRobot2D.h>
 #include <AprilTags.h>
 
 
@@ -42,8 +42,8 @@ typedef map <string,::IceProxy::Ice::Object*> MapPrx;
 using namespace std;
 
 using namespace RoboCompLaser;
-using namespace RoboCompController;
 using namespace RoboCompDifferentialRobot;
+using namespace RoboCompTrajectoryRobot2D;
 using namespace RoboCompAprilTags;
 
 
@@ -67,9 +67,9 @@ public:
 	QMutex *mutex;
 	
 
-	ControllerPrx controller_proxy;
 	DifferentialRobotPrx differentialrobot_proxy;
 	LaserPrx laser_proxy;
+	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 
 	virtual void newAprilTag(const tagsList &tags) = 0;
 

@@ -28,9 +28,9 @@ QObject()
 #endif
 
 {
-	controller_proxy = (*(ControllerPrx*)mprx["ControllerProxy"]);
 	differentialrobot_proxy = (*(DifferentialRobotPrx*)mprx["DifferentialRobotProxy"]);
 	laser_proxy = (*(LaserPrx*)mprx["LaserProxy"]);
+	trajectoryrobot2d_proxy = (*(TrajectoryRobot2DPrx*)mprx["TrajectoryRobot2DProxy"]);
 
 
 	mutex = new QMutex(QMutex::Recursive);

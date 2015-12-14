@@ -207,8 +207,6 @@ int ::Controller::run(int argc, char* argv[])
 		TrajectoryRobot2DI *trajectoryrobot2d = new TrajectoryRobot2DI(worker);
 		adapterTrajectoryRobot2D->add(trajectoryrobot2d, communicator()->stringToIdentity("trajectoryrobot2d"));
 		adapterTrajectoryRobot2D->activate();
-		cout << "[" << PROGRAM_NAME << "]: TrajectoryRobot2D adapter created in port " << tmp << endl;
-
 
 
 

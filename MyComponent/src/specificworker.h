@@ -23,11 +23,6 @@
 */
 
 
-
-
-
-
-
 #ifndef SPECIFICWORKER_H
 #define SPECIFICWORKER_H
 
@@ -35,6 +30,8 @@
 #include <innermodel/innermodel.h>
 #include <math.h>
 #include <tagslist.h>
+//LEMON
+#include <lemon/list_graph.h>
 
 class SpecificWorker : public GenericWorker
 {
@@ -48,19 +45,21 @@ public:
 
 public slots:
 	void compute();
-	void navegate();
-	void searchMark(int initMark);
-	void wait();
-	void wall();
-	void controller();
 
 private:
   ListaMarcas* listaMarcas;
 
   enum class State  { INIT, SEARCH, NAVEGATE, WAIT, WALL, FINISH, CONTROLLER};
   State estado = State::INIT;
-  TLaserData ldata;
   InnerModel* inner;
+	RoboCompLaser::TLaserData ldata;
+	RoboCompDifferentialRobot::TBaseState bState;
+	void controller();
+	
+	//Lemon
+	lemon::ListGraph graph;
+	lemon::ListGraph::NodeMap<QVec> *map;
+
 
 };
 

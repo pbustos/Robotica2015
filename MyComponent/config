@@ -4,7 +4,7 @@ LaserProxy = laser:tcp -h localhost -p 10003
 DifferentialRobotProxy = differentialrobot:tcp -h localhost -p 10004
 # Endpoints for subscriptions
 AprilTagsTopic.Endpoints=tcp -p 14999
-ControllerProxy = controller:tcp -h localhost -p 10050
+TrajectoryRobot2DProxy = trajectoryrobot2d:tcp -h localhost -p 10050
 
 
 # This property is used by the clients to connect to IceStorm.
