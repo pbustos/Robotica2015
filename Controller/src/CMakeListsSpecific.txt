@@ -3,6 +3,7 @@
 SET ( SOURCES
   specificworker.cpp
   specificmonitor.cpp
+  qcustomplot.cpp
   #vfh_algorithm.cpp
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.cpp
 )
@@ -11,10 +12,12 @@ SET ( SOURCES
 SET ( HEADERS
   specificworker.h
   specificmonitor.h
+  qcustomplot.h
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.h
 )
 
 #INCLUDE($ENV{ROBOCOMP}/cmake/modules/ipp.cmake)
-SET (LIBS ${LIBS} -losgViewer)
+#SET (LIBS ${LIBS} -losgViewer -lqcustomplot -lqcustomplotd)
+SET (LIBS ${LIBS} -losgViewer )
 ADD_DEFINITIONS( -std=c++11 )
 

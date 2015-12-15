@@ -32,9 +32,12 @@
 #include <innermodel/innermodelviewer.h>
 #include <innermodel/innermodeldraw.h>
 //#include "vfh_algorithm.h"
+#include <qcustomplot.h>
 
 #define ROBOT_SIZE 400.f
 #define ROBOT_RADIUS 200.f
+#define MAX_ROBOT_ROTATION_SPEED 0.8
+#define MAX_ADVANCE_SPEED 500
 
 class SpecificWorker : public GenericWorker
 {
@@ -90,6 +93,11 @@ private:
 	bool inLaserField(const QVec& pointInRobot);
 	QTime elapsedTime;
 	void createSubTarget2();
+	void initPlotCommands();
+	int xtime = 0;
+	QQueue<double> yDQ;
+	QQueue<double> yDAQ;
+	QVector<double> xD,yD,yDA;
 	
 	enum class State  {INIT, IDLE, WORKING, FINISH, TURN};
 	State state = State::INIT;

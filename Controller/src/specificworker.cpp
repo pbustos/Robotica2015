@@ -40,6 +40,8 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 	graphicsView->show();
 	graphicsView->scale(3,3);
 	
+	initPlotCommands();
+	
 // 	//fake robot
 // 	inner->newTransform("vbox", "static", inner->getNode("robot"), 0, 100, 0); 
 // 	inner->newPlane("vboxPlane", inner->getNode("vbox"), "#ff0000", 400,50,400, 0, 0,0,1, 0, 0, -100 );
@@ -92,6 +94,7 @@ void SpecificWorker::compute()
 				 break;
 				 
 			 case State::IDLE:
+				 	yDQ.enqueue(0); if(yDQ.size() >= 100) yDQ.dequeue();	
 				 break;
 				 
 			 case State::WORKING:
@@ -134,10 +137,48 @@ void SpecificWorker::compute()
 	innerViewer->update();
 	osgView->autoResize();
 	osgView->frame();
+	
 	RoboCompTrajectoryRobot2D::NavState ns = toMiddleware();
 	if( stateAnt != ns.state )
 		plainTextEdit->appendPlainText(QString::fromStdString(ns.state));
 	stateAnt = ns.state;
+	
+	yD.clear();yDA.clear();
+	foreach( double f , yDQ )
+		yD.append(f);
+	foreach( double f , yDAQ )
+		yDA.append(f/500);
+
+	customPlot->graph(0)->setData(xD, yD);
+	customPlot->graph(1)->setData(xD, yDA);
+	customPlot->replot(QCustomPlot::rpImmediate);
+}
+
+void SpecificWorker::initPlotCommands()
+{
+	// create graph and assign data to it:
+	customPlot->addGraph();
+	customPlot->graph(0)->setPen(QPen(Qt::blue)); // line color blue for first graph
+	customPlot->graph(0)->setName("Rot speed");
+	customPlot->addGraph();
+	customPlot->graph(1)->setPen(QPen(Qt::red)); // line color blue for first graph
+	customPlot->graph(1)->setName("Adv speed");
+
+	// give the axes some labels:
+	customPlot->xAxis->setLabel("epochs");
+	customPlot->yAxis->setLabel("rad/sg & mm/sg");
+	// set axes ranges, so we see all data:
+	customPlot->xAxis->setRange(0, 100);
+	customPlot->yAxis->setRange(-2, 2);
+	//customPlot->rescaleAxes();
+	
+	//fill buffers
+	for( int i=0; i<100; i++)
+	{
+		xD.append((double)i);
+		yDQ.enqueue(0);
+		yDAQ.enqueue(0);
+	}
 }
 
 void SpecificWorker::histogram()
@@ -250,9 +291,9 @@ bool SpecificWorker::freeWay()
 	
 	///CHECK if TOO CLOSE AND STOP
 	
-	if(alpha > ldata.front().angle or alpha < ldata.back().angle)
+	if( (alpha > ldata.front().angle) or ( alpha < ldata.back().angle) )
 	{
-	  if(cTarget.isActiveSubtarget == false)
+	  //if(cTarget.isActiveSubtarget == false)
 		{
 			qDebug() << "The target is behind. I should turn around";
 			state = State::TURN;
@@ -260,7 +301,7 @@ bool SpecificWorker::freeWay()
 		return false;
 	}
 	
-	for(uint i = 0; i<ldata.size(); i++)
+	for(size_t  i = 0; i<ldata.size(); i++)
   {
 		if(ldata[i].angle <= alpha)
     {
@@ -278,6 +319,7 @@ bool SpecificWorker::freeWay()
 			}
      }
   }
+  return false;
 }
 
 /**
@@ -302,9 +344,7 @@ bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, floa
 	lPoints.append( QVec::vec3(0,0, ROBOT_RADIUS));
 	
 	
-	float dist = targetInRobot.norm2();
-	if( dist > 1500) dist = 1500;	//TESTING 
-	
+	float dist = targetInRobot.norm2();	
 	float step = ceil(dist/ (ROBOT_SIZE/3));
 	QVec tNorm = targetInRobot.normalize();
 	
@@ -320,7 +360,9 @@ bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, floa
 		foreach(QVec p, lPoints)
 			if( inLaserField( inner->transform("robot", p, "vbox")) == false )
 			{
-				return false;
+				qDebug() << "collision of point " << inner->transform("robot", p, "vbox");
+				if( landa > 1500) return true;  //Not free all the way but enough to keep going
+				else return false;
 			}
 	}
 	return true;
@@ -341,7 +383,7 @@ bool SpecificWorker::inLaserField(const QVec& pointInRobot)
 	for(auto ld : ldata)
 		if(ld.angle <= alpha)
 		{
-			if( ld.dist < LASER_MAX and ld.dist >= d)
+			if( ld.dist>0 and ld.dist < LASER_MAX and ld.dist >= d)
 				return true;
 			else
 				return false;
@@ -360,12 +402,13 @@ void SpecificWorker::goToTarget()
  		alpha = 0;
 	
   float r = alpha;
-  
+  if( fabs(r) > MAX_ROBOT_ROTATION_SPEED) 
+			r = std::copysignf( MAX_ROBOT_ROTATION_SPEED , alpha);
 // 	
   float d = 0.3*distToTarget;
-	/*if( fabs(r) > 0.2 and distToTarget> 400) d = 0;
- */ 
-	if(d>500) d=500;
+	if( fabs(r) > 0.2 and distToTarget> 400) d = 0;
+  
+	if(d > MAX_ADVANCE_SPEED) d = MAX_ADVANCE_SPEED;
 	
 	qDebug()<< "---------------------------";
 	qDebug() << __FUNCTION__ << t << "rot" << r << "adv" << d;
@@ -373,7 +416,10 @@ void SpecificWorker::goToTarget()
 	try
 	{		
 		differentialrobot_proxy->setSpeedBase(d,r); 
+		yDQ.enqueue(r); if(yDQ.size() >= 100) yDQ.dequeue();	
+		yDAQ.enqueue(d); if(yDAQ.size() >= 100) yDAQ.dequeue();	
 	}
+	
 	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
  }
 
@@ -384,6 +430,7 @@ void SpecificWorker::goToTarget()
 	*/
  void SpecificWorker::turn()
 {
+	qDebug()<<  __FUNCTION__;
 	float alpha;
 	QVec t = inner->transform("robot", cTarget.target, "world");
 	alpha =atan2(t.x(), t.z() );
@@ -394,20 +441,30 @@ void SpecificWorker::goToTarget()
 		state = State::WORKING;
 	}
 	else
-	{
-		if( alpha > ldata.front().angle )  // turn right
-			try{ differentialrobot_proxy->setSpeedBase(0, fabs(alpha));}
-			catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;}
-		else if( alpha < ldata.back().angle ) 															// turn left
-			try{ differentialrobot_proxy->setSpeedBase(0, -fabs(alpha));}
-			catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
+	{	
+		float rot = alpha;
+		if( fabs(rot) > MAX_ROBOT_ROTATION_SPEED) 
+			rot = std::copysignf(MAX_ROBOT_ROTATION_SPEED,alpha);
+		
+		if( alpha > ldata.front().angle ) 	// turn right
+				rot = fabs(rot);
+		if( alpha < ldata.back().angle ) 		// turn left
+				rot = -fabs(rot);
+		
+		try
+		{ 
+			differentialrobot_proxy->setSpeedBase(0, rot);
+			yDQ.enqueue(rot); if(yDQ.size() >= 100) yDQ.dequeue();	
+			yDAQ.enqueue(0); if(yDAQ.size() >= 100) yDAQ.dequeue();	
+		}
+		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 	}
 }
 
 
 void SpecificWorker::goToSubTarget()
 {
-  qDebug()<<  __FUNCTION__<<"ir subTarget";  
+  qDebug()<<  __FUNCTION__ << "subTarget " << cTarget.subTarget << "robot" << inner->transform("world","robot"); 
   QVec t = inner->transform("robot", cTarget.subTarget, "world");
   float alpha =atan2(t.x(), t.z());
 	
@@ -417,19 +474,25 @@ void SpecificWorker::goToSubTarget()
 //   qDebug()<<  __FUNCTION__<< "subtarget" << cTarget.subTarget;
 //   qDebug()<<  __FUNCTION__<< "subtarget"<< d << alpha << d << r;
    
-    if(d<100)  //Subtarget achieved
+    if(d < 100)  //Subtarget achieved
     {
         cTarget.isActiveSubtarget = false;
-				differentialrobot_proxy->setSpeedBase(0,0);
+				//differentialrobot_proxy->setSpeedBase(0,0);
 				qDebug()<<  __FUNCTION__<<"subTarget alcanzado";  	
 				undrawTarget("subTarget");
-    }else
-    {
-      if( fabs(r) > 0.2) d = 0;
-      if(d>300)d=300;
-      differentialrobot_proxy->setSpeedBase(d,r);
     }
-    qDebug() <<  __FUNCTION__<< "subtarget"<< d << r;
+    else
+    {
+			if( fabs(r) > MAX_ROBOT_ROTATION_SPEED) 
+				r = std::copysignf(MAX_ROBOT_ROTATION_SPEED,alpha);
+      if( fabs(r) > 0.2) d = 0;
+			//METER LA DEPENDENCIA CON ROT
+      if(d > MAX_ADVANCE_SPEED) d = MAX_ADVANCE_SPEED;
+      differentialrobot_proxy->setSpeedBase(d,r);
+			yDQ.enqueue(r); if(yDQ.size() >= 100) yDQ.dequeue();	
+			yDAQ.enqueue(d); if(yDAQ.size() >= 100) yDAQ.dequeue();	
+    }
+    qDebug() <<  __FUNCTION__<< "command to robot Adv:"<< d << "Rot" << r;
 }
 
 /// ATENCIÓN, este método tiene que ser mejorado. Tal y como está puede seleccionar subtargets al otro lado de una pared.
@@ -437,7 +500,7 @@ void SpecificWorker::goToSubTarget()
 
 void SpecificWorker::createSubTarget()
 {
-  qDebug() <<  __FUNCTION__;
+  qDebug() <<  __FUNCTION__ ;
   
   QVec t = inner->transform("laser", cTarget.target, "world");
   float alpha =atan2(t.x(), t.z() );
@@ -447,10 +510,10 @@ void SpecificWorker::createSubTarget()
 	float di=0,dj=0;
 	for(i=(int)ldata.size()/2; i>1; i--)
 	{
+		di = ldata[i].dist;
 		if( (ldata[i].dist - ldata[i-1].dist) < -ROBOT_SIZE )
 		{
 			int k=i-1;
-			di = ldata[i].dist;
 			while( (k > 0) and (fabs( ldata[i].dist*sin(ldata[k].angle - ldata[i].angle)) < ROBOT_SIZE*1.2 ))
 			{ 
 				k--; }
@@ -461,10 +524,10 @@ void SpecificWorker::createSubTarget()
 	//search now the left side
 	for(j=(int)ldata.size()/2; j<(int)ldata.size()-2; j++)
 	{
+		dj = ldata[j].dist;
 		if( (ldata[j].dist - ldata[j+1].dist) < -ROBOT_SIZE )
 		{
 			int k=j+1;
-			dj = ldata[j].dist;
 			while( (k < (int)ldata.size()-1) and (fabs( ldata[j].dist*sin(ldata[k].angle - ldata[j].angle)) < ROBOT_SIZE*1.2 ))
 			{ k++; }
 			j=k;
@@ -478,20 +541,22 @@ void SpecificWorker::createSubTarget()
 	
 	if( fabs(ldata[i].angle - alpha) < fabs(ldata[j].angle - alpha) )
 	{
-		if( di > ldata[i].dist) di = ldata[i].dist;
-		if( di > 1000) di = 1000;
+		if( di > ldata[i].dist-(ROBOT_RADIUS*1.3)) di = ldata[i].dist-ROBOT_RADIUS*1.3;
+		if( di > ROBOT_SIZE*6) di = ROBOT_SIZE*6;
 		cTarget.subTarget=inner->laserTo ("world", "laser", di,ldata[i].angle);
+		qDebug() << __FUNCTION__ << "Chosen i" << i << "di" << di;
 	}
 	else
 	{
-		if( dj > ldata[j].dist) di = ldata[j].dist;
-		if( dj > 1000) dj = 1000;
+		if( dj > (ldata[j].dist-ROBOT_RADIUS*1.3)) dj = ldata[j].dist-ROBOT_RADIUS*1.3;
+		if( dj > ROBOT_SIZE*6) dj = ROBOT_SIZE*6;
 		cTarget.subTarget=inner->laserTo ("world", "laser", dj,ldata[j].angle);
+		qDebug() << __FUNCTION__ << "Chosen j" << j << "dj" << dj;
 	}
 		
 	drawTarget("subTarget",cTarget.subTarget,"#ff0000");
 	cTarget.isActiveSubtarget = true;
-  qDebug()<<  __FUNCTION__<< "Subtarget" << cTarget.subTarget;
+  qDebug()<<  __FUNCTION__<< "Subtarget created at " << cTarget.subTarget << "with robot at" << inner->transform("world","robot");
   
 }
 
@@ -554,6 +619,7 @@ void SpecificWorker::stopRobot()
 {
 	try
 	{	
+		qDebug() << __FUNCTION__ ;
 		differentialrobot_proxy->setSpeedBase(0,0);
 		cTarget.isActiveTarget = false;
 		cTarget.isActiveSubtarget = false;
