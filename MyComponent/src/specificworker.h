@@ -32,6 +32,10 @@
 #include <tagslist.h>
 //LEMON
 #include <lemon/list_graph.h>
+#include <lemon/dijkstra.h>
+
+#define FLOOR 2500
+
 
 class SpecificWorker : public GenericWorker
 {
@@ -57,10 +61,13 @@ private:
 	void controller();
 	
 	//Lemon
-	lemon::ListGraph graph;
-	lemon::ListGraph::NodeMap<QVec> *map;
+	lemon::ListDigraph graph;
+	lemon::ListDigraph::NodeMap<QVec> *map;
+	lemon::ListDigraph::ArcMap <float> *arcMap;
 
-
+	QQueue<QVec> colaPuntos;
+	lemon::ListDigraph::NodeIt robotNode;
+	
 };
 
 #endif

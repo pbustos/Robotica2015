@@ -542,14 +542,14 @@ void SpecificWorker::createSubTarget()
 	if( fabs(ldata[i].angle - alpha) < fabs(ldata[j].angle - alpha) )
 	{
 		if( di > ldata[i].dist-(ROBOT_RADIUS*1.3)) di = ldata[i].dist-ROBOT_RADIUS*1.3;
-		if( di > ROBOT_SIZE*6) di = ROBOT_SIZE*6;
+		//if( di > ROBOT_SIZE*6) di = ROBOT_SIZE*6;
 		cTarget.subTarget=inner->laserTo ("world", "laser", di,ldata[i].angle);
 		qDebug() << __FUNCTION__ << "Chosen i" << i << "di" << di;
 	}
 	else
 	{
 		if( dj > (ldata[j].dist-ROBOT_RADIUS*1.3)) dj = ldata[j].dist-ROBOT_RADIUS*1.3;
-		if( dj > ROBOT_SIZE*6) dj = ROBOT_SIZE*6;
+		//if( dj > ROBOT_SIZE*6) dj = ROBOT_SIZE*6;
 		cTarget.subTarget=inner->laserTo ("world", "laser", dj,ldata[j].angle);
 		qDebug() << __FUNCTION__ << "Chosen j" << j << "dj" << dj;
 	}

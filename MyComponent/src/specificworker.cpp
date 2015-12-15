@@ -26,20 +26,19 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
  inner = new InnerModel("/home/robocomp/Software/robotica/Robotica2015/apartament.xml");
  listaMarcas= new ListaMarcas(inner);
  
- 
- lemon::ListGraph::Node u = graph.addNode();
- lemon::ListGraph::Node v = graph.addNode();
- lemon::ListGraph::Edge  a = graph.addEdge(u, v);
- 
- map = new lemon::ListGraph::NodeMap<QVec>(graph);
- 
- //(*map)[u]=2;
- map->set(u,QVec::vec3(3,4,5));
- 
- cout << "Hello World! This is LEMON library here." << endl;
- cout << "We have a directed graph with " << countNodes(graph) << " nodes "  << "and " << countArcs(graph) << " arc." << endl;
- qDebug() << "Map " << map->operator[](u);
- 
+ lemon::ListDigraph::Node robot = graph.addNode();
+
+  map = new lemon::ListDigraph::NodeMap<QVec>(graph);
+	try
+	{
+		differentialrobot_proxy->getBaseState(bState);
+		inner->updateTransformValues("robot", bState.x, 0, bState.z, 0, bState.alpha, 0);	//actualiza los valores del robot en el arbol de memoria
+		map->set(robot, inner->transform("world","robot"));
+		qDebug() << __FUNCTION__<< "Robot inserted in the graph at " << inner->transform("world","robot");
+	}
+	catch(const Ice::Exception &ex){ std::cout << ex.what() << std::endl;}; 
+	
+	arcMap = new lemon::ListDigraph::ArcMap<float>(graph);
 }
 
 /**
@@ -92,19 +91,49 @@ void SpecificWorker::controller()
 {
   try
   {
-    NavState state=trajectoryrobot2d_proxy->getState();
-    //qDe
+		NavState state=trajectoryrobot2d_proxy->getState();
+    
     if(state.state == "IDLE")
     {
-      ListaMarcas::Marca m=listaMarcas->get(listaMarcas->getInitMark());
-      QVec w = inner -> transform("world",QVec::vec3(m.tx,m.ty,m.tz),"rgbd");
-      TargetPose t={w.x(), w.y(), w.z()};
-      trajectoryrobot2d_proxy->go(t);
+			if( colaPuntos.isEmpty() == false )
+			{
+				QVec head = colaPuntos.dequeue();
+				RoboCompTrajectoryRobot2D::TargetPose t;
+				t.x = head.x(); t.z = head.z();
+      //trajectoryrobot2d_proxy->go(t);
+			}
+			
+			//get a random state
+			QVec qpos = QVec::uniformVector(2, -FLOOR, FLOOR);
+			
+			//obtain the closest point to the graph
+			float dist = std::numeric_limits< float >::max(), d;
+			lemon::ListDigraph::NodeIt closestNode;
+			for (lemon::ListDigraph::NodeIt n(graph); n != lemon::INVALID; ++n)
+			{
+				d = (qpos-(*map)[n]).norm2();
+				if( dist < d ) 
+				{ 
+					dist = d;
+					closestNode = n;
+				}	
+			}
+			//Check if closest point is where the robot is now
+			if( closestNode == robotNode)
+			{}
+			else	//Search shortest path along graph from closest node to robot
+			{
+				//Dijkstra robotNode, closesNode
+				lemon::Path<lemon::ListDigraph> p;
+				//lemon::ListDigraph::DistMap d;
+				float d;
+				bool reached = dijkstra(graph,*arcMap).path(p).dist(d).run(robotNode,closestNode);
+			}
+			
     }
     else if(state.state == "FINISH")
     {
-      
-      estado = State::WAIT;
+      qDebug() << __FUNCTION__ << "Controller has finished";
       return;
     }
   }
@@ -121,10 +150,5 @@ void SpecificWorker::controller()
 
 void SpecificWorker::newAprilTag(const tagsList& tags)
 {
-   for( auto t: tags)
-   {
-     listaMarcas->add(t);
-    
-   }
 }
  
