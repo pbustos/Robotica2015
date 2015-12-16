@@ -1,14 +1,17 @@
-CommonBehavior.Endpoints=tcp -p 11000
+CommonBehavior.Endpoints=tcp -p 12221 
+
+
 # Proxies for required interfaces
-LaserProxy = laser:tcp -h localhost -p 10003
 DifferentialRobotProxy = differentialrobot:tcp -h localhost -p 10004
-# Endpoints for subscriptions
-AprilTagsTopic.Endpoints=tcp -p 14999
+LaserProxy = laser:tcp -h localhost -p 10003
 TrajectoryRobot2DProxy = trajectoryrobot2d:tcp -h localhost -p 10050
 
+# Endpoints for subscriptions
+AprilTagsTopic.Endpoints=tcp -p  11500
 
 # This property is used by the clients to connect to IceStorm.
 TopicManager.Proxy=IceStorm/TopicManager:default -p 9999
+
 
 Ice.Warn.Connections=0
 Ice.Trace.Network=0

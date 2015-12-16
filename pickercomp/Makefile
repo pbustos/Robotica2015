@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/pbustos/software/robotica/Robotica2015/pickercomp
+CMAKE_SOURCE_DIR = /home/salabeta/Escritorio/Robotica2015/pickercomp
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/pbustos/software/robotica/Robotica2015/pickercomp
+CMAKE_BINARY_DIR = /home/salabeta/Escritorio/Robotica2015/pickercomp
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -114,9 +114,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pbustos/software/robotica/Robotica2015/pickercomp/CMakeFiles /home/pbustos/software/robotica/Robotica2015/pickercomp/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/salabeta/Escritorio/Robotica2015/pickercomp/CMakeFiles /home/salabeta/Escritorio/Robotica2015/pickercomp/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/pbustos/software/robotica/Robotica2015/pickercomp/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/salabeta/Escritorio/Robotica2015/pickercomp/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

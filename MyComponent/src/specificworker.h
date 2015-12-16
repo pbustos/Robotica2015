@@ -45,26 +45,29 @@ public:
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 	void newAprilTag(const tagsList &tags);
-
+	enum class State  { INIT, WAIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE};
 
 public slots:
 	void compute();
 
 private:
-  ListaMarcas* listaMarcas;
-
-  enum class State  { INIT, SEARCH, NAVEGATE, WAIT, WALL, FINISH, CONTROLLER};
-  State estado = State::INIT;
-  InnerModel* inner;
+	
+	ListaMarcas* listaMarcas;
+	State estado = State::INIT;
+	InnerModel* inner;
 	RoboCompLaser::TLaserData ldata;
 	RoboCompDifferentialRobot::TBaseState bState;
-	void controller();
-	
+	State pickNewPoint();
+	State verifyPoint();
+	State gotoPoints();
+	State search();
+
 	//Lemon
 	lemon::ListGraph graph;
 	lemon::ListGraph::NodeMap<QVec> *map;
 	lemon::ListGraph::EdgeMap <float> *edgeMap;
-
+	lemon::ListGraph::NodeIt closestNode;
+	
 	QQueue<QVec> colaPuntos;
 	lemon::ListGraph::NodeIt robotNode;
 	
