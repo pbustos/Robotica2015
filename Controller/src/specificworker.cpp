@@ -24,7 +24,7 @@
 SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 {
   //inner = new InnerModel("/home/robocomp/robocomp/files/innermodel/simpleworld.xml");
-	QString innerFile = "/home/robocomp/Escritorio/Robotica2015/apartament.xml";
+	QString innerFile = "/home/robocomp/Software/robotica/Robotica2015/apartament.xml";
 	if( QFile::exists(innerFile) )
 		inner = new InnerModel(innerFile.toStdString());
 	else	

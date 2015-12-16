@@ -35,7 +35,10 @@
 #include <lemon/dijkstra.h>
 
 #define FLOOR 2500
-
+#define ROBOT_SIZE 400.f
+#define ROBOT_RADIUS 200.f
+#define MAX_ROBOT_ROTATION_SPEED 0.8
+#define MAX_ADVANCE_SPEED 500
 
 class SpecificWorker : public GenericWorker
 {
@@ -45,7 +48,7 @@ public:
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 	void newAprilTag(const tagsList &tags);
-	enum class State  { INIT, WAIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE};
+	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING};
 
 public slots:
 	void compute();
@@ -61,12 +64,15 @@ private:
 	State verifyPoint();
 	State gotoPoints();
 	State search();
+	State travelling();
 
 	//Lemon
 	lemon::ListGraph graph;
 	lemon::ListGraph::NodeMap<QVec> *map;
 	lemon::ListGraph::EdgeMap <float> *edgeMap;
 	lemon::ListGraph::NodeIt closestNode;
+	lemon::Path<lemon::ListGraph> path;
+	QVec qpos; //New random point
 	
 	QQueue<QVec> colaPuntos;
 	lemon::ListGraph::NodeIt robotNode;

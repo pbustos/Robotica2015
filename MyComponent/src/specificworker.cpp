@@ -23,8 +23,8 @@
 */
 SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 {
- //inner = new InnerModel("/home/robocomp/Software/robotica/Robotica2015/apartament.xml");
- inner = new InnerModel("/home/robocomp/Escritorio/Robotica2015/apartament.xml");
+ inner = new InnerModel("/home/robocomp/Software/robotica/Robotica2015/apartament.xml");
+ //inner = new InnerModel("/home/robocomp/Escritorio/Robotica2015/apartament.xml");
  
  listaMarcas= new ListaMarcas(inner);
  
@@ -42,7 +42,7 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 	}
 	catch(const Ice::Exception &ex){ std::cout << ex.what() << std::endl;}; 
 	
-   edgeMap = new lemon::ListGraph::EdgeMap<float>(graph);
+  edgeMap = new lemon::ListGraph::EdgeMap<float>(graph);
 }
 
 /**
@@ -84,7 +84,8 @@ void SpecificWorker::compute()
 			case State::VERIFY_POINT:
 				estado = verifyPoint();
 				break;	
-			case State::WAIT:
+			case State::TRAVELLING:
+				estado = travelling();
 				break;
 			case State::FINISH:
 				std::cout << "FINISH" << std::endl;
@@ -106,9 +107,9 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
   try
   {
 		//get a random state
-		QVec qpos = QVec::uniformVector(3, -FLOOR, FLOOR);
-		qDebug() << __FUNCTION__ << qpos;
+		this->qpos = QVec::uniformVector(3, -FLOOR, FLOOR);
 		qpos[1] = 0;  //to avoid y
+		qDebug() << __FUNCTION__ << qpos;
 		
 		//obtain the closest point to the graph
 		float dist = std::numeric_limits< float >::max(), d;		
@@ -127,55 +128,129 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
 		//Search shortest path along graph from closest node to robot
 		if( closestNode != robotNode)
 		{
-			lemon::Path<lemon::ListGraph> p;
 			float dd;
 			
-			bool reached = dijkstra(graph,*edgeMap).path(p).dist(dd).run(robotNode,closestNode);
+			bool reached = dijkstra(graph,*edgeMap).path(path).dist(dd).run(robotNode,closestNode);
 		
 			qDebug() << reached << d;
 		
-			for( lemon::PathNodeIt<lemon::Path<lemon::ListGraph> > pIt(graph, p); pIt != lemon::INVALID; ++pIt)
-			{
+			for( lemon::PathNodeIt<lemon::Path<lemon::ListGraph> > pIt(graph, path); pIt != lemon::INVALID; ++pIt)
 				qDebug() << map->operator[](pIt);
-				colaPuntos.enqueue(map->operator[](pIt));
-			}			
+			
+			qDebug() << "---------------";
 		}	
 	}
 	catch(const Ice::Exception &ex)
-    {
+  {
         std::cout << ex << std::endl;
-    }
-   return State::GOTO_POINTS;
+  }
+  return State::GOTO_POINTS;
 }
 
-SpecificWorker::State SpecificWorker::verifyPoint()
-{
-	//girar para alinearnos
-	//que el target está dentro del laser
-	//si está metemeos el nodo y el edge
-	//si no está, metemos el punto navegable maś cercano y el arco
-	lemon::ListGraph::Node newP = graph.addNode();
-	map->set(newP, map->operator[](closestNode));
-	
-	return State::VERIFY_POINT;	
-}
+
 
 SpecificWorker::State SpecificWorker::gotoPoints()
 {
-	NavState state=trajectoryrobot2d_proxy->getState();
-  
-	QVec head; 
-	if( colaPuntos.isEmpty() == false )
+	//NavState state=trajectoryrobot2d_proxy->getState();
+	qDebug() << __FUNCTION__ << "Path length" << path.length();
+	
+	if( path.length() == 0 ) 
 	{
-		head = colaPuntos.dequeue();
-		RoboCompTrajectoryRobot2D::TargetPose t;
-		t.x = head.x(); t.z = head.z();
-		qDebug() << "cola" << head;
-	}	
-	//robotNode = lemon::ListGraph::NodeIt();  OJO
-	return State::VERIFY_POINT;
+		qDebug() << __FUNCTION__ << "Empty path, we are finished here!";
+		return State::VERIFY_POINT;
+	}
+	
+	lemon::PathNodeIt<lemon::Path<lemon::ListGraph> > pIt(graph, path);
+	
+	try	
+	{ 
+		RoboCompTrajectoryRobot2D::NavState state =  trajectoryrobot2d_proxy->getState();	
+		if( state.state == "WORKING" )
+			return State::GOTO_POINTS;
+		if( state.state == "FINISH" )
+			return State::GOTO_POINTS;
+		if( state.state == "IDLE" )
+		{
+			qDebug() << __FUNCTION__ << "Now travelling to ---" << map->operator[](++pIt);
+			RoboCompTrajectoryRobot2D::TargetPose target; target.y=0;
+			target.x = map->operator[](pIt).x(); target.z = map->operator[](pIt).z();
+			trajectoryrobot2d_proxy->go(target);
+			return State::TRAVELLING;
+		}
+	}
+	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
+	
+	qDebug() << "---------------";
+	return State::GOTO_POINTS;
 }
 
+SpecificWorker::State SpecificWorker::travelling()
+{
+	try	
+	{ 
+		RoboCompTrajectoryRobot2D::NavState state =  trajectoryrobot2d_proxy->getState();	
+		if( state.state == "WORKING" )
+			return State::TRAVELLING;
+		if( state.state == "FINISH" )
+		{
+			lemon::PathNodeIt<lemon::Path<lemon::ListGraph> > pIt(graph, path);
+			robotNode = lemon::ListGraph::NodeIt(graph, lemon::ListGraph::Node(++pIt));
+			path.eraseFront();
+			return State::GOTO_POINTS;
+		}
+	}
+	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
+	return State::TRAVELLING;
+}
+
+
+SpecificWorker::State SpecificWorker::verifyPoint()
+{
+	qDebug() << __FUNCTION__ ;
+	
+	float alfa = atan2(qpos.x(), qpos.z());
+	
+	if( alfa > ldata.front().angle )
+	{
+		try	{	differentialrobot_proxy->setSpeedBase(0, 0.4*fabs(alfa));	}
+		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
+		return State::VERIFY_POINT;
+	}
+	else if( alfa < ldata.back().angle ) 
+	{
+		try	{	differentialrobot_proxy->setSpeedBase(0, -0.4*fabs(alfa));	}
+		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
+		return State::VERIFY_POINT;
+	}
+	else 
+	{
+		try	{	differentialrobot_proxy->setSpeedBase(0,0);	}
+		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
+	}
+	
+	//Check if target is inside laser field. If not make qpos the furthest possible point
+	QVec qposR = inner->transform("laser",qpos,"world").norm2();
+	float dist = qposR.norm2();
+	for(auto l: ldata)
+		if(l.angle < alfa)	
+		{
+			if( l.dist < dist + ROBOT_RADIUS)
+				qpos = qposR.normalize() * (l.dist-ROBOT_RADIUS);
+			break;
+		}
+
+	//add new node to the graph
+	lemon::ListGraph::Node newP = graph.addNode();
+	map->set(newP, qpos);
+	lemon::ListGraph::Edge newEdge = graph.addEdge(closestNode,newP);
+	edgeMap->set( newEdge, (map->operator[](newP) - map->operator[](closestNode)).norm2());
+	
+	qDebug() << "Listing the graph";
+	for (lemon::ListGraph::NodeIt n(graph); n != lemon::INVALID; ++n)
+		qDebug() << map->operator[](n);
+	qDebug() << "---------------";
+	return State::PICK_NEW_POINT;	
+}
 
 ////////////////////////////
 /// ICEPeriod
