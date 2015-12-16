@@ -26,19 +26,21 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
  inner = new InnerModel("/home/robocomp/Software/robotica/Robotica2015/apartament.xml");
  listaMarcas= new ListaMarcas(inner);
  
- lemon::ListDigraph::Node robot = graph.addNode();
+ lemon::ListGraph::Node robot = graph.addNode();
 
-  map = new lemon::ListDigraph::NodeMap<QVec>(graph);
+  map = new lemon::ListGraph::NodeMap<QVec>(graph);
 	try
 	{
 		differentialrobot_proxy->getBaseState(bState);
 		inner->updateTransformValues("robot", bState.x, 0, bState.z, 0, bState.alpha, 0);	//actualiza los valores del robot en el arbol de memoria
 		map->set(robot, inner->transform("world","robot"));
+		robotNode = lemon::ListGraph::NodeIt(graph,robot);
+		
 		qDebug() << __FUNCTION__<< "Robot inserted in the graph at " << inner->transform("world","robot");
 	}
 	catch(const Ice::Exception &ex){ std::cout << ex.what() << std::endl;}; 
 	
-	arcMap = new lemon::ListDigraph::ArcMap<float>(graph);
+	edgeMap = new lemon::ListGraph::EdgeMap<float>(graph);
 }
 
 /**
@@ -69,10 +71,14 @@ void SpecificWorker::compute()
 						break;
 					case State::SEARCH:
 						break;
-					case State::CONTROLLER:
+					case State::PICKNEWPOINT:
 						std::cout << "CONTROLLER" << std::endl;
 						controller();
 						break;
+					case State::GOTOPOINTS:
+						break;
+					case State::VERIFYPOINT:
+						break;	
 					case State::WAIT:
 						break;
 					case State::FINISH:
@@ -104,12 +110,14 @@ void SpecificWorker::controller()
 			}
 			
 			//get a random state
-			QVec qpos = QVec::uniformVector(2, -FLOOR, FLOOR);
+			QVec qpos = QVec::uniformVector(3, -FLOOR, FLOOR);
+			qpos[1] = 0;
 			
 			//obtain the closest point to the graph
 			float dist = std::numeric_limits< float >::max(), d;
-			lemon::ListDigraph::NodeIt closestNode;
-			for (lemon::ListDigraph::NodeIt n(graph); n != lemon::INVALID; ++n)
+			lemon::ListGraph::NodeIt closestNode;
+			
+			for (lemon::ListGraph::NodeIt n(graph); n != lemon::INVALID; ++n)
 			{
 				d = (qpos-(*map)[n]).norm2();
 				if( dist < d ) 
@@ -118,19 +126,31 @@ void SpecificWorker::controller()
 					closestNode = n;
 				}	
 			}
-			//Check if closest point is where the robot is now
-			if( closestNode == robotNode)
-			{}
-			else	//Search shortest path along graph from closest node to robot
+		
+			//Search shortest path along graph from closest node to robot
+			if( closestNode != robotNode)
 			{
-				//Dijkstra robotNode, closesNode
-				lemon::Path<lemon::ListDigraph> p;
-				//lemon::ListDigraph::DistMap d;
-				float d;
-				bool reached = dijkstra(graph,*arcMap).path(p).dist(d).run(robotNode,closestNode);
-			}
-			
-    }
+				lemon::Path<lemon::ListGraph> p;
+				float dd;
+				
+				bool reached = dijkstra(graph,*edgeMap).path(p).dist(dd).run(robotNode,closestNode);
+				qDebug() << reached << d;
+				
+	// 			while (!dijkstra.emptyQueue()) 
+	// 			{
+	// 				ListGraph::Node n = dijkstra.processNextNode();
+	// 				cout << g.id(n) << ' ' << dijkstra.dist(g) << endl;
+	// 			}
+
+				for( lemon::PathNodeIt<lemon::Path<lemon::ListGraph> > pIt(graph, p); pIt != lemon::INVALID; ++pIt)
+				{
+					qDebug() << map->operator[](pIt);
+					colaPuntos.enqueue(map->operator[](pIt));
+					state = State::GOTOPOINTS;
+					return;
+				}			
+			}	
+		}
     else if(state.state == "FINISH")
     {
       qDebug() << __FUNCTION__ << "Controller has finished";

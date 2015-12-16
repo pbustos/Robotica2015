@@ -61,12 +61,12 @@ private:
 	void controller();
 	
 	//Lemon
-	lemon::ListDigraph graph;
-	lemon::ListDigraph::NodeMap<QVec> *map;
-	lemon::ListDigraph::ArcMap <float> *arcMap;
+	lemon::ListGraph graph;
+	lemon::ListGraph::NodeMap<QVec> *map;
+	lemon::ListGraph::EdgeMap <float> *edgeMap;
 
 	QQueue<QVec> colaPuntos;
-	lemon::ListDigraph::NodeIt robotNode;
+	lemon::ListGraph::NodeIt robotNode;
 	
 };
 
