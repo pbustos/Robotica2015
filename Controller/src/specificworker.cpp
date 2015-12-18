@@ -134,9 +134,9 @@ void SpecificWorker::compute()
   {    std::cout << "Error reading from Camera" << e << std::endl;  }
 	
 	histogram();
-// 	innerViewer->update();
-// 	osgView->autoResize();
-// 	osgView->frame();
+	innerViewer->update();
+	osgView->autoResize();
+	osgView->frame();
 	
 	RoboCompTrajectoryRobot2D::NavState ns = toMiddleware();
 	if( stateAnt != ns.state )
@@ -489,6 +489,7 @@ void SpecificWorker::goToSubTarget()
 			//METER LA DEPENDENCIA CON ROT
       if(d > MAX_ADVANCE_SPEED) d = MAX_ADVANCE_SPEED;
       differentialrobot_proxy->setSpeedBase(d,r);
+			//Drawing stuff
 			yDQ.enqueue(r); if(yDQ.size() >= 100) yDQ.dequeue();	
 			yDAQ.enqueue(d); if(yDAQ.size() >= 100) yDAQ.dequeue();	
     }
@@ -536,9 +537,6 @@ void SpecificWorker::createSubTarget()
 	}
  
 	//Select i or j, the closest one
-	//TODO CHECK that the subtarget is inside the laserfield.
-	
-	
 	if( fabs(ldata[i].angle - alpha) < fabs(ldata[j].angle - alpha) )
 	{
 		if( di > ldata[i].dist-(ROBOT_RADIUS*1.3)) di = ldata[i].dist-ROBOT_RADIUS*1.3;

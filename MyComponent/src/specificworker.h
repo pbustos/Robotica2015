@@ -37,7 +37,11 @@
 #include <lemon/list_graph.h>
 #include <lemon/dijkstra.h>
 
-#define FLOOR 2500
+#define FLOORX_MIN 0
+#define FLOORX_MAX 5000
+#define FLOORZ_MIN -7500
+#define FLOORZ_MAX 0
+
 #define ROBOT_SIZE 400.f
 #define ROBOT_RADIUS 200.f
 #define MAX_ROBOT_ROTATION_SPEED 0.8
@@ -51,7 +55,7 @@ public:
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 	void newAprilTag(const tagsList &tags);
-	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING};
+	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING, ERROR, ALIGN_TO_NEW};
 
 public slots:
 	void compute();
@@ -63,11 +67,14 @@ private:
 	InnerModel* inner;
 	RoboCompLaser::TLaserData ldata;
 	RoboCompDifferentialRobot::TBaseState bState;
+	float LASER_MAX;
 	State pickNewPoint();
 	State verifyPoint();
 	State gotoPoints();
 	State search();
 	State travelling();
+	State alignToNew();
+	bool checkFreeWay(const QVec& targetInRobot);
 
 	//Lemon
 	lemon::ListGraph graph;
@@ -82,6 +89,10 @@ private:
 	
 	OsgView *osgView;
 	InnerModelViewer *innerViewer;
+	
+public slots:
+	void startAction();
+	void stopAction();
 	
 };
 

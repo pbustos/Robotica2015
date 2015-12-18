@@ -26,6 +26,12 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
  inner = new InnerModel("/home/robocomp/Software/robotica/Robotica2015/apartament.xml");
  //inner = new InnerModel("/home/robocomp/Escritorio/Robotica2015/apartament.xml");
  
+	InnerModelLaser *lm;
+	if ((lm = dynamic_cast<InnerModelLaser *>(inner->getNode("laser"))) != NULL)
+		LASER_MAX = lm->max;
+	else
+		qFatal("Fatal error. Laser element not found in XML file");
+ 
  listaMarcas= new ListaMarcas(inner);
  
  lemon::ListGraph::Node robot = graph.addNode();
@@ -58,7 +64,11 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 	tb->setByMatrix(m);
  	osgView->setCameraManipulator(tb);
 	innerViewer = new InnerModelViewer(inner, "root", osgView->getRootGroup(), true);
-	show();
+	
+	//UI
+	connect(startButton, SIGNAL(clicked()), this, SLOT(startAction()));
+	connect(stopButton, SIGNAL(clicked()), this, SLOT(stopAction()));
+	
 }
 
 /**
@@ -71,7 +81,7 @@ SpecificWorker::~SpecificWorker()
 
 bool SpecificWorker::setParams(RoboCompCommonBehavior::ParameterList params)
 {
-	timer.start(500);
+	timer.start(100);
 	return true;
 }
 
@@ -87,12 +97,14 @@ void SpecificWorker::compute()
 		switch( estado )
 		{
 			case State::INIT:
-				estado = State::PICK_NEW_POINT;
 				break;
 			case State::SEARCH:
 				break;
 			case State::PICK_NEW_POINT:
 				estado = pickNewPoint();
+				break;
+			case State::ALIGN_TO_NEW:
+				estado = alignToNew();
 				break;
 			case State::GOTO_POINTS:
 				estado = gotoPoints();
@@ -109,6 +121,9 @@ void SpecificWorker::compute()
 				estado = State::IDLE;
 				break;
 			case State::IDLE:
+				break;
+			case State::ERROR:
+				qDebug() << "Error";
 				break;
 			} 
 		}
@@ -127,11 +142,27 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
   try
   {
 		//get a random state
-		this->qpos = QVec::uniformVector(3, -FLOOR, FLOOR);
-		qpos[1] = 0;  //to avoid y
-		qDebug() << __FUNCTION__ << qpos;
+		qpos = QVec::zeros(3);
+		this->qpos[0] = QVec::uniformVector(1, FLOORX_MIN, FLOORX_MAX)[0];
+		this->qpos[2] = QVec::uniformVector(1, FLOORZ_MIN, FLOORZ_MAX)[0];
+		InnerModelDraw::addPlane_ignoreExisting(innerViewer, "target", "world", qpos, QVec::vec3(1,0,0), "#0000ff", QVec::vec3(100,100,100));
+
+		qDebug() << __FUNCTION__ << "Robot at:" << inner->transform("world","robot")<< "New point:" << qpos;
 		
-		//obtain the closest point to the graph
+		//Turn the robot to point towards the new target
+		QVec qposR = inner->transform("laser",qpos,"world");
+		float alfa = atan2(qposR.x(), qposR.z());
+		if( fabs(alfa > 0.5) )	//If target qposR not in front of the robot, turn around
+			return State::ALIGN_TO_NEW;
+		
+		//Check if the point is accesible from robot position
+		if ( checkFreeWay( qposR ))
+		{
+			qDebug() << __FUNCTION__ << "Free way found. Leaving for VERIFY_POINT";
+			return State::VERIFY_POINT;
+		}
+		
+		//If not free way to target, obtain the closest point to the graph
 		float dist = std::numeric_limits< float >::max(), d;		
 		for (lemon::ListGraph::NodeIt n(graph); n != lemon::INVALID; ++n)
 		{
@@ -143,7 +174,7 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
 				closestNode = n;
 			}	
 		}
-		qDebug() << __FUNCTION__ << "dist" << d << "node" << map->operator[](closestNode);
+		qDebug() << __FUNCTION__ << "dist to new point" << d << "at node with position:" << map->operator[](closestNode);
 		
 		//Search shortest path along graph from closest node to robot
 		if( closestNode != robotNode)
@@ -167,6 +198,86 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
   return State::GOTO_POINTS;
 }
 
+bool SpecificWorker::checkFreeWay( const QVec &targetInRobot)
+{
+	QList<QVec> lPoints;
+	
+	//points on the corners of thw square
+	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,ROBOT_RADIUS)); 
+	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,-ROBOT_RADIUS)); 
+	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,-ROBOT_RADIUS));
+	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,ROBOT_RADIUS));
+	
+	//points on the sides
+	lPoints.append( QVec::vec3(ROBOT_RADIUS,0,0));
+	lPoints.append( QVec::vec3(0,0,-ROBOT_RADIUS));
+	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,0));
+	lPoints.append( QVec::vec3(0,0, ROBOT_RADIUS));
+	
+	float dist = targetInRobot.norm2();	
+	float alpha =atan2(targetInRobot.x(), targetInRobot.z() );
+	float step = ceil(dist/ (ROBOT_SIZE/3));
+	QVec tNorm = targetInRobot.normalize();
+	QVec r;
+	inner->updateTransformValues ("vbox",0, 0, 0, 0, 0, 0, "robot");	
+	
+	for(size_t  i = 0; i<ldata.size(); i++)
+  {
+		if(ldata[i].angle <= alpha)
+    {
+			for(float landa=400; landa<=dist; landa+=step)
+			{	
+				r = tNorm * landa;
+				inner->updateTransformValues ("vbox",r.x(), r.y(), r.z(), 0, alpha, 0, "robot");	
+				foreach(QVec p, lPoints)
+				{
+						QVec pointInRobot = inner->transform("robot", p, "vbox");
+						float dPR = pointInRobot.norm2();
+						float alphaPR = atan2(pointInRobot.x(), pointInRobot.z());
+						bool  inLaserField;
+						for(auto ld : ldata)
+							if(ld.angle <= alphaPR)
+							{
+								if( ld.dist>0 and ld.dist < LASER_MAX and ld.dist >= dPR)
+								{
+									//qDebug()<<__FUNCTION__<< "Hay camino libre al target" << ldata[i].dist << d;
+									break;
+								}
+								else
+								{
+									qDebug() << "collision of point " << inner->transform("robot", p, "vbox");
+									return false;
+								}
+							}		
+				}
+			}
+			qDebug()<<__FUNCTION__<< "Hay camino libre al target. Laser distance:" << ldata[i].dist << ". Target distance:" << dist;
+			break;  //We found the laser ray aligned with the target.
+     }
+  }
+	return true;  
+}
+
+
+SpecificWorker::State SpecificWorker::alignToNew()
+{
+	QVec qposR = inner->transform("laser",qpos,"world");
+	float alfa = atan2(qposR.x(), qposR.z());
+	qDebug() << __FUNCTION__ << "Robot at:" << inner->transform("world","robot") << "alfa:" << alfa;
+	
+	if( fabs(alfa > 0.5) )	//If target qposR not in front of the robot, turn around
+	{
+		try	{	differentialrobot_proxy->setSpeedBase(0, 0.4*alfa);	}
+		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
+		return State::ALIGN_TO_NEW;
+	}
+	else 
+	{
+		try	{	differentialrobot_proxy->setSpeedBase(0,0);	}
+		catch(Ice::Exception &ex) {	std::cout<<ex.what()<<std::endl;};
+		return State::PICK_NEW_POINT;	
+	}
+}
 
 
 SpecificWorker::State SpecificWorker::gotoPoints()
@@ -226,19 +337,13 @@ SpecificWorker::State SpecificWorker::travelling()
 
 SpecificWorker::State SpecificWorker::verifyPoint()
 {
-	qDebug() << __FUNCTION__ ;
+	QVec qposR = inner->transform("laser",qpos,"world");
+	float alfa = atan2(qposR.x(), qposR.z());
+	qDebug() << __FUNCTION__ << "Robot at:" << inner->transform("world","robot") << "alfa:" << alfa;
 	
-	float alfa = atan2(qpos.x(), qpos.z());
-	
-	if( alfa > ldata.front().angle )
+	if( fabs(alfa > 0.5) )	//If target qposR not in front of the robot, turn around
 	{
-		try	{	differentialrobot_proxy->setSpeedBase(0, 0.4*fabs(alfa));	}
-		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
-		return State::VERIFY_POINT;
-	}
-	else if( alfa < ldata.back().angle ) 
-	{
-		try	{	differentialrobot_proxy->setSpeedBase(0, -0.4*fabs(alfa));	}
+		try	{	differentialrobot_proxy->setSpeedBase(0, 0.4*alfa);	}
 		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
 		return State::VERIFY_POINT;
 	}
@@ -249,16 +354,18 @@ SpecificWorker::State SpecificWorker::verifyPoint()
 	}
 	
 	//Check if target is inside laser field. If not make qpos the furthest possible point
-	QVec qposR = inner->transform("laser",qpos,"world").norm2();
+	QVec newPos = this->qpos;
 	float dist = qposR.norm2();
 	for(auto l: ldata)
-		if(l.angle < alfa)	
+		if(l.angle < alfa)	//can be achieved because we just oriented the robot towards the target.
 		{
 			if( l.dist < dist + ROBOT_RADIUS)
-				qpos = qposR.normalize() * (l.dist-ROBOT_RADIUS);
+				newPos = inner->transform("world", qposR.normalize() * (l.dist-ROBOT_RADIUS), "laser");
 			break;
 		}
-
+	
+	qDebug() << __FUNCTION__ << "Final point to add to graph:" << qpos;
+		
 	//add new node to the graph
 	lemon::ListGraph::Node newP = graph.addNode();
 	map->set(newP, qpos);
@@ -268,9 +375,30 @@ SpecificWorker::State SpecificWorker::verifyPoint()
 	qDebug() << "Listing the graph";
 	for (lemon::ListGraph::NodeIt n(graph); n != lemon::INVALID; ++n)
 		qDebug() << map->operator[](n);
+	static int cont=0;
+	InnerModelDraw::addPlane_ignoreExisting(innerViewer, "vertex_" + QString::number(cont++), "world", qpos, 
+																					QVec::vec3(1,0,0), "#00ff00", QVec::vec3(100,100,100));
+	InnerModelDraw::removeNode(innerViewer, "target");
 	qDebug() << "---------------";
 	return State::PICK_NEW_POINT;	
 }
+
+////////////////////////////
+/// UI
+////////////////////////////
+
+void SpecificWorker::startAction()
+{
+	estado = State::PICK_NEW_POINT;
+}
+
+void SpecificWorker::stopAction()
+{
+	trajectoryrobot2d_proxy->stop();
+	estado = State::FINISH;
+}
+
+
 
 ////////////////////////////
 /// ICEPeriod
