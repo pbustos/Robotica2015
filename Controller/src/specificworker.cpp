@@ -59,7 +59,7 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 	tb->setByMatrix(m);
  	osgView->setCameraManipulator(tb);
 	innerViewer = new InnerModelViewer(inner, "root", osgView->getRootGroup(), true);
-	show();
+	//show();
 	
 	connect( pushButton, SIGNAL(clicked()), this, SLOT(stopSlot()));
 }
@@ -134,9 +134,9 @@ void SpecificWorker::compute()
   {    std::cout << "Error reading from Camera" << e << std::endl;  }
 	
 	histogram();
-	innerViewer->update();
-	osgView->autoResize();
-	osgView->frame();
+// 	innerViewer->update();
+// 	osgView->autoResize();
+// 	osgView->frame();
 	
 	RoboCompTrajectoryRobot2D::NavState ns = toMiddleware();
 	if( stateAnt != ns.state )

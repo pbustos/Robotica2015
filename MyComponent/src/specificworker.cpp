@@ -43,6 +43,22 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 	catch(const Ice::Exception &ex){ std::cout << ex.what() << std::endl;}; 
 	
   edgeMap = new lemon::ListGraph::EdgeMap<float>(graph);
+	
+	
+	//Innermodelviewer
+	osgView = new OsgView( frame );
+	osgGA::TrackballManipulator *tb = new osgGA::TrackballManipulator;
+	osg::Vec3d eye(osg::Vec3(4000.,4000.,-1000.));
+	osg::Vec3d center(osg::Vec3(0.,0.,-0.));
+	osg::Vec3d up(osg::Vec3(0.,-1.,0.));
+	tb->setHomePosition(eye, center, up, true);
+	osg::Matrixf m;
+	//m.set( 0.998955, 0.043652, -0.0135747, 0, -0.0158273, 0.0516788, -0.998538, 0, -0.0428867, 0.997709, 0.0523157, 0, 4185.27, 7313.77, 4883.92, 1); 
+	tb->setByMatrix(osg::Matrixf::lookAt(eye,center,up));
+	tb->setByMatrix(m);
+ 	osgView->setCameraManipulator(tb);
+	innerViewer = new InnerModelViewer(inner, "root", osgView->getRootGroup(), true);
+	show();
 }
 
 /**
@@ -100,6 +116,10 @@ void SpecificWorker::compute()
     {
       std::cout << e << std::endl;
     }
+    
+  innerViewer->update();
+ 	osgView->autoResize();
+ 	osgView->frame();
 }
 
 SpecificWorker::State SpecificWorker::pickNewPoint()

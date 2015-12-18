@@ -28,6 +28,9 @@
 
 #include <genericworker.h>
 #include <innermodel/innermodel.h>
+#include <osgviewer/osgview.h>
+#include <innermodel/innermodelviewer.h>
+#include <innermodel/innermodeldraw.h>
 #include <math.h>
 #include <tagslist.h>
 //LEMON
@@ -76,6 +79,9 @@ private:
 	
 	QQueue<QVec> colaPuntos;
 	lemon::ListGraph::NodeIt robotNode;
+	
+	OsgView *osgView;
+	InnerModelViewer *innerViewer;
 	
 };
 
