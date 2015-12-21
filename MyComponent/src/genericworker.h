@@ -28,9 +28,10 @@
 
 #include <CommonBehavior.h>
 #include <Laser.h>
+#include <RCISMousePicker.h>
 #include <DifferentialRobot.h>
-#include <TrajectoryRobot2D.h>
 #include <AprilTags.h>
+#include <TrajectoryRobot2D.h>
 
 
 
@@ -42,9 +43,10 @@ typedef map <string,::IceProxy::Ice::Object*> MapPrx;
 using namespace std;
 
 using namespace RoboCompLaser;
+using namespace RoboCompRCISMousePicker;
 using namespace RoboCompDifferentialRobot;
-using namespace RoboCompTrajectoryRobot2D;
 using namespace RoboCompAprilTags;
+using namespace RoboCompTrajectoryRobot2D;
 
 
 
@@ -71,6 +73,7 @@ public:
 	LaserPrx laser_proxy;
 	TrajectoryRobot2DPrx trajectoryrobot2d_proxy;
 
+	virtual void setPick(const Pick &myPick) = 0;
 	virtual void newAprilTag(const tagsList &tags) = 0;
 
 

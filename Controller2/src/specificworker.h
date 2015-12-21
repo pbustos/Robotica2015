@@ -34,6 +34,13 @@
 #include "currenttarget.h"
 #include "waypoints.h"
 
+#define ROBOT_SIZE 400.f
+#define ROBOT_RADIUS 200.f
+#define MAX_ROBOT_ROTATION_SPEED 0.8
+#define MAX_ADVANCE_SPEED 700
+#define MAX_ANGLE_ERROR 0.5
+
+
 class SpecificWorker : public GenericWorker
 {
 Q_OBJECT
@@ -43,6 +50,7 @@ public:
 		
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 
+	//ICE
 	NavState getState();
 	float goBackwards(const TargetPose &target);
 	void stop();
@@ -56,7 +64,7 @@ public slots:
 	void compute(); 	
 
 private:
-
+	
 	RoboCompTrajectoryRobot2D::NavState nState;
 	InnerModel* inner;
 	TLaserData ldata, ldataR;
@@ -64,26 +72,30 @@ private:
 	CurrentTarget cTarget;
 	QGraphicsScene scene;
 	
-	void createSubTarget();
-	void goToSubTarget();
-	bool freeWay();
-	void goToTarget();
+	enum class State  {INIT, IDLE, SET_NEW_TARGET,  FOLLOW_PATH, FINISH, FINAL_TURN, TURN};
+	State state = State::INIT;
+	
+	State setNewTarget();
+	State followPath();
 	bool atTarget();
+	State turn();
+	State finalTurn();
+	bool plan();
+	bool controller();
+
+	State freeWay(const QVec& tg);
 	void histogram();
 	void stopRobot();
+	void stopRobotAndFinish();
 	void drawTarget(const QString &name, const QVec& target, const QString &color="#009900");
 	void undrawTarget(const QString &name);
-	void turn();
 	RoboCompTrajectoryRobot2D::NavState toMiddleware();
 	QTime elapsedTime;
-	
-	enum class State  {INIT, IDLE, WORKING, FINISH, TURN};
-	State state = State::INIT;
 	
 	OsgView *osgView;
 	InnerModelViewer *innerViewer;
 	
-	WayPoints road;
+	WayPoints path;
 };
 
 #endif

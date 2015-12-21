@@ -110,6 +110,9 @@ void SpecificWorker::compute()
 			case State::PICK_NEW_POINT:
 				estado = pickNewPoint();
 				break;
+			case State::PLAN:
+				estado = plan();
+				break;		
 			case State::GOTO_POINTS:
 				estado = gotoPoints();
 				break;
@@ -152,9 +155,18 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
 		InnerModelDraw::addPlane_ignoreExisting(innerViewer, "target", "world", qpos, QVec::vec3(1,0,0), "#0000ff", QVec::vec3(100,100,100));
 	
 		qDebug() << __FUNCTION__ << "Robot at:" << inner->transform("world","robot")<< "New point:" << qpos;
-		map->set(robotNode, inner->transform("world","robot"));
-		
-		//Check if the point is accesible from robot position
+	
+	}
+	catch(const Ice::Exception &ex)
+  {
+        std::cout << ex << std::endl;
+  }
+  return State::PLAN;
+}
+
+SpecificWorker::State SpecificWorker::plan()
+{
+			//Check if the point is accesible from robot position
 // 		QVec qposR = inner->transform("laser",qpos,"world");
 // 		if ( checkFreeWay( qposR ))
 // 		{
@@ -162,8 +174,11 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
 // 			return State::VERIFY_POINT;
 // 		}
 // 		
-		//If not free way to target, obtain the closest point to the graph
 	
+		//set the robot's current position in robotNode
+		map->set(robotNode, inner->transform("world","robot"));
+	
+		//search closes node to roobot
 		float dist = std::numeric_limits< float >::max(), d;		
 		for (lemon::ListGraph::NodeIt n(graph); n != lemon::INVALID; ++n)
 		{
@@ -191,11 +206,6 @@ SpecificWorker::State SpecificWorker::pickNewPoint()
 			
 			qDebug() << "---------------";
 		}	
-	}
-	catch(const Ice::Exception &ex)
-  {
-        std::cout << ex << std::endl;
-  }
   return State::GOTO_POINTS;
 }
 
@@ -416,11 +426,13 @@ SpecificWorker::State SpecificWorker::verifyPoint()
 	InnerModelDraw::addPlane_ignoreExisting(innerViewer, "vertex_" + QString::number(cont), "world", inner->transform("world",newPosR,"laser"), 
 																					QVec::vec3(1,0,0), "#00ff00", QVec::vec3(100,100,100));
 	
-	QLine2D line(inner->transform("world",newPosR,"laser") , map->operator[](this->closestNode) );	
+	/*QLine2D line(inner->transform("world",newPosR,"laser") , map->operator[](this->closestNode) );	
 	float dl = (inner->transform("world",newPosR,"laser") - map->operator[](this->closestNode)).norm2();
-	QVec center = map->operator[](this->closestNode) + ((inner->transform("world",newPosR,"laser") - map->operator[](this->closestNode))*(float)0.5);
-	
+	QVec center = map->operator[](this->closestNode) + ((inner->transform("world",newPosR,"laser") - map->operator[](this->closestNode))*(float)0.5);	
 	InnerModelDraw::drawLine(innerViewer, "line_" + QString::number(cont++), "world", line.getNormalForOSGLineDraw(), center, dl, 50, "#0000ff");
+	*/
+	InnerModelDraw::drawLine2Points(innerViewer, "line_" + QString::number(cont++), "world", 
+																	inner->transform("world",newPosR,"laser") , map->operator[](this->closestNode), 50, "#0000ff");
 	
 	InnerModelDraw::removeNode(innerViewer, "target");
 	qDebug() << "---------------";
@@ -455,4 +467,14 @@ void SpecificWorker::stopAction()
 void SpecificWorker::newAprilTag(const tagsList& tags)
 {
 }
- 
+
+void SpecificWorker::setPick(const Pick& myPick)
+{
+		qpos = QVec::zeros(3);
+		this->qpos[0] = myPick.x;
+		this->qpos[2] = -myPick.z;
+		InnerModelDraw::addPlane_ignoreExisting(innerViewer, "target", "world", qpos, QVec::vec3(1,0,0), "#0000ff", QVec::vec3(100,100,100));
+		qDebug() << __FUNCTION__ << "Robot at:" << inner->transform("world","robot")<< "New point:" << qpos;
+		estado  = State::PLAN;
+	
+}

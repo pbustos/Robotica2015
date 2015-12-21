@@ -30,7 +30,7 @@
 #include <innermodel/innermodel.h>
 #include <osgviewer/osgview.h>
 #include <innermodel/innermodelviewer.h>
-//#include <innermodel/innermodeldraw.h>
+#include <innermodel/innermodeldraw.h>
 #include <math.h>
 #include <tagslist.h>
 //LEMON
@@ -57,7 +57,8 @@ public:
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 	void newAprilTag(const tagsList &tags);
-	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING, ERROR};
+	void setPick(const Pick &myPick);
+	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING, ERROR, PLAN};
 
 public slots:
 	void compute();
@@ -75,6 +76,7 @@ private:
 	State search();
 	State travelling();
 	State alignToNew();
+	State plan();
 	bool checkFreeWay(const QVec& targetInRobot);
 	bool alignToTarget(const QVec& targetInRobot);
 
@@ -95,7 +97,7 @@ private:
 public slots:
 	void startAction();
 	void stopAction();
-	
+
 	
 };
 

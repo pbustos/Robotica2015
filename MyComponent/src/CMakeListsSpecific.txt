@@ -5,8 +5,6 @@ SET ( SOURCES
   specificworker.cpp
   specificmonitor.cpp
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.cpp
-  innermodeldraw.cpp
-  
 )
 
 # Headers set
@@ -15,7 +13,6 @@ SET ( HEADERS
   specificworker.h
   specificmonitor.h
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.h
-#  innermodeldraw.h
 )
 
 INCLUDE($ENV{ROBOCOMP}/cmake/modules/ipp.cmake)

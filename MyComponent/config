@@ -8,6 +8,8 @@ TrajectoryRobot2DProxy = trajectoryrobot2d:tcp -h localhost -p 10050
 
 # Endpoints for subscriptions
 AprilTagsTopic.Endpoints=tcp -p  11500
+RCISMousePickerTopic.Endpoints=tcp -p 11501
+
 
 # This property is used by the clients to connect to IceStorm.
 TopicManager.Proxy=IceStorm/TopicManager:default -p 9999

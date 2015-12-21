@@ -412,7 +412,7 @@ void SpecificWorker::goToTarget()
   if( fabs(r) > MAX_ROBOT_ROTATION_SPEED) 
 			r = std::copysignf( MAX_ROBOT_ROTATION_SPEED , alpha);
 // 	
-  float d = 0.3*distToTarget;
+  float d = 0.5*distToTarget;
 	if( fabs(r) > 0.2 and distToTarget> 400) d = 0;
   
 	if(d > MAX_ADVANCE_SPEED) d = MAX_ADVANCE_SPEED;
