@@ -118,11 +118,12 @@ void SpecificWorker::compute()
  						createSubTarget();
  					}
  					break;
-					
 			 case State::TURN:
-						turn();
-				 break;
-				 
+					turn();
+					break;
+			 case State::TURN_FINAL:
+					turnFinal();
+					break;
 			 case State::FINISH:
 						sleep(2);
 						undrawTarget("target");
@@ -176,8 +177,7 @@ void SpecificWorker::initPlotCommands()
 	for( int i=0; i<100; i++)
 	{
 		xD.append((double)i);
-		yDQ.enqueue(0);
-		yDAQ.enqueue(0);
+		yDQ.enqueue(0);	yDAQ.enqueue(0);
 	}
 }
 
@@ -253,7 +253,7 @@ void SpecificWorker::histogram()
 bool SpecificWorker::atTarget()
 {
   QVec t = inner->transform("robot", cTarget.target, "world");
-  float d = t.norm2();
+  float d = t.subVector(0,2).norm2();
 	static float dAnt = d;
 	
 	qDebug()<< "---------------------------";
@@ -261,9 +261,16 @@ bool SpecificWorker::atTarget()
   
 	if ( d < 100 or (d<500 and (d-dAnt)>0))
 	{
+		if( cTarget.doRotation == true)
+		{
+			qDebug() << __FUNCTION__<< "Robot at place. Now turning.";
+			state = State::TURN_FINAL;
+			return false;
+		}
 		qDebug() << __FUNCTION__<< " = true";
 		dAnt = std::numeric_limits<float>::max();
 		undrawTarget("subTarget");
+		undrawTarget("target");
     return true;
 	}
   else 
@@ -282,7 +289,7 @@ bool SpecificWorker::atTarget()
 bool SpecificWorker::freeWay()
 {
 	QVec t = inner->transform("robot", cTarget.target, "world");
-  float d = t.norm2();
+  float d = t.subVector(0,2).norm2();
   float alpha =atan2(t.x(), t.z() );
 	
 	qDebug()<< "---------------------------";
@@ -343,10 +350,10 @@ bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, floa
 	lPoints.append( QVec::vec3(-ROBOT_RADIUS,0,0));
 	lPoints.append( QVec::vec3(0,0, ROBOT_RADIUS));
 	
-	
-	float dist = targetInRobot.norm2();	
+	QVec trans = targetInRobot.subVector(0,2);
+	float dist = trans.norm2();	
 	float step = ceil(dist/ (ROBOT_SIZE/3));
-	QVec tNorm = targetInRobot.normalize();
+	QVec tNorm = trans.normalize();
 	
 	QVec r;
 	inner->updateTransformValues ("vbox",0, 0, 0, 0, 0, 0, "robot");	
@@ -377,7 +384,7 @@ bool SpecificWorker::thereIsATubeToTarget(int i, const QVec &targetInRobot, floa
  */
 bool SpecificWorker::inLaserField(const QVec& pointInRobot)
 {
-	float d = pointInRobot.norm2();
+	float d = pointInRobot.subVector(0,2).norm2();
 	float alpha = atan2(pointInRobot.x(), pointInRobot.z());
 	
 	for(auto ld : ldata)
@@ -396,7 +403,7 @@ void SpecificWorker::goToTarget()
 {
 	QVec t = inner->transform("robot", cTarget.target, "world");
  
-	float distToTarget = t.norm2();
+	float distToTarget = t.subVector(0,2).norm2();
 	float alpha =atan2(t.x(), t.z());
 	if( distToTarget < 250 ) 
  		alpha = 0;
@@ -460,6 +467,40 @@ void SpecificWorker::goToTarget()
 		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 	}
 }
+
+
+void SpecificWorker::turnFinal()
+{
+	qDebug()<<  __FUNCTION__;
+	
+  float alpha = inner->transform6D("world","robot").ry();  //Current robot angle wrt to global Z axis
+	float beta = cTarget.target.ry();  //target angle with to Z axis
+	qDebug()<<  __FUNCTION__<< "error" << (alpha-beta);
+	
+	//float error = atan2(sin(beta-alpha), cos(beta-alpha));
+	float errA = fmod(alpha -beta, M_PI);
+	float errB = fmod(beta -alpha, M_PI);
+	float error;
+	if( errA < errB ) error = -errA;
+	if( errB >= errA ) error = errB;
+	
+	if( fabs(error) < MAX_ANGLE_ERROR )
+	{
+		qDebug()<<  __FUNCTION__ << "Finish TurnFinal with erro:"  << error;
+		cTarget.doRotation = false;
+		stopRobot();
+	}
+	else
+	{	
+		try	
+		{	
+			differentialrobot_proxy->setSpeedBase(0, -0.4 * error);
+			yDQ.enqueue(-0.4*error); if(yDQ.size() >= 100) yDQ.dequeue();	
+		}
+		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
+	}
+}
+
 
 
 void SpecificWorker::goToSubTarget()
@@ -552,7 +593,7 @@ void SpecificWorker::createSubTarget()
 		qDebug() << __FUNCTION__ << "Chosen j" << j << "dj" << dj;
 	}
 		
-	drawTarget("subTarget",cTarget.subTarget,"#ff0000");
+	drawTarget("subTarget",cTarget.subTarget,"#0000ff");
 	cTarget.isActiveSubtarget = true;
   qDebug()<<  __FUNCTION__<< "Subtarget created at " << cTarget.subTarget << "with robot at" << inner->transform("world","robot");
   
@@ -621,7 +662,8 @@ void SpecificWorker::stopRobot()
 		differentialrobot_proxy->setSpeedBase(0,0);
 		cTarget.isActiveTarget = false;
 		cTarget.isActiveSubtarget = false;
-		state = State::IDLE;
+		state = State::FINISH;
+		undrawTarget("target");
 		
 // 		osgGA::CameraManipulator *cm = osgView->getCameraManipulator();
 // 		std::cout << cm->getMatrix() << std::endl;
@@ -631,7 +673,7 @@ void SpecificWorker::stopRobot()
 
 void SpecificWorker::drawTarget(const QString &name, const QVec &target, const QString &color)
 {
-  InnerModelDraw::addPlane_ignoreExisting(innerViewer, name, "world", QVec::vec3(target(0), 100, target(2)), QVec::vec3(1,0,0), color, QVec::vec3(100,100,100));
+  InnerModelDraw::addPlane_ignoreExisting(innerViewer, name, "world", QVec::vec3(target(0), 100, target(2)), QVec::vec3(1,0,0), color, QVec::vec3(200,200,200));
 }
 void SpecificWorker::undrawTarget(const QString& name)
 {
@@ -706,13 +748,15 @@ float SpecificWorker::changeTarget(const TargetPose &target)
 
 float SpecificWorker::go(const TargetPose &target)
 {
-	cTarget.target = QVec::vec3(target.x, target.y, target.z);
+	cTarget.target = QVec::vec6(target.x, target.y, target.z, target.rx, target.ry, target.rz);
+	cTarget.doRotation = target.doRotation;
 	cTarget.isActiveTarget = true;
 	elapsedTime = QTime::currentTime();
 	qDebug()<< __FUNCTION__ <<"ICE::GO" << cTarget.target;
-	
+	if( target.doRotation)
+			qDebug() << "With rotation: " << target.ry;
 	state = State::WORKING;
-	drawTarget("target",cTarget.target);
+	drawTarget("target",cTarget.target, "#ff0000");
 	return (inner->transform("world","robot") - cTarget.target).norm2();	//Distance to target in mm
 }
 

@@ -38,6 +38,8 @@
 #define ROBOT_RADIUS 200.f
 #define MAX_ROBOT_ROTATION_SPEED 0.8
 #define MAX_ADVANCE_SPEED 500
+#define MAX_ANGLE_ERROR 0.5
+
 
 class SpecificWorker : public GenericWorker
 {
@@ -65,7 +67,7 @@ private:
 	typedef struct
 	{
 	  QVec target, subTarget;
-		float rot;
+		bool doRotation=false;
 	  bool isActiveTarget=false, isActiveSubtarget=false;
 		
 	} currentTarget;
@@ -88,6 +90,7 @@ private:
 	void drawTarget(const QString &name, const QVec& target, const QString &color="#009900");
 	void undrawTarget(const QString &name);
 	void turn();
+	void turnFinal();
 	RoboCompTrajectoryRobot2D::NavState toMiddleware();
 	bool thereIsATubeToTarget(int i, const QVec& targetInRobot, float alpha);
 	bool inLaserField(const QVec& pointInRobot);
@@ -99,7 +102,7 @@ private:
 	QQueue<double> yDAQ;
 	QVector<double> xD,yD,yDA;
 	
-	enum class State  {INIT, IDLE, WORKING, FINISH, TURN};
+	enum class State  {INIT, IDLE, WORKING, FINISH, TURN, TURN_FINAL};
 	State state = State::INIT;
 	
 	OsgView *osgView;

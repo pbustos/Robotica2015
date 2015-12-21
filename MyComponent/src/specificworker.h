@@ -30,16 +30,18 @@
 #include <innermodel/innermodel.h>
 #include <osgviewer/osgview.h>
 #include <innermodel/innermodelviewer.h>
-#include <innermodel/innermodeldraw.h>
+//#include <innermodel/innermodeldraw.h>
 #include <math.h>
 #include <tagslist.h>
 //LEMON
 #include <lemon/list_graph.h>
 #include <lemon/dijkstra.h>
 
+#include "innermodeldraw.h"
+
 #define FLOORX_MIN 0
-#define FLOORX_MAX 5000
-#define FLOORZ_MIN -7500
+#define FLOORX_MAX 6000
+#define FLOORZ_MIN -8500
 #define FLOORZ_MAX 0
 
 #define ROBOT_SIZE 400.f
@@ -55,14 +57,13 @@ public:
 	~SpecificWorker();
 	bool setParams(RoboCompCommonBehavior::ParameterList params);
 	void newAprilTag(const tagsList &tags);
-	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING, ERROR, ALIGN_TO_NEW};
+	enum class State  { INIT, FINISH, SEARCH, PICK_NEW_POINT, GOTO_POINTS, VERIFY_POINT, IDLE, TRAVELLING, ERROR};
 
 public slots:
 	void compute();
 
 private:
 	
-	ListaMarcas* listaMarcas;
 	State estado = State::INIT;
 	InnerModel* inner;
 	RoboCompLaser::TLaserData ldata;
@@ -75,6 +76,7 @@ private:
 	State travelling();
 	State alignToNew();
 	bool checkFreeWay(const QVec& targetInRobot);
+	bool alignToTarget(const QVec& targetInRobot);
 
 	//Lemon
 	lemon::ListGraph graph;
@@ -93,6 +95,7 @@ private:
 public slots:
 	void startAction();
 	void stopAction();
+	
 	
 };
 
