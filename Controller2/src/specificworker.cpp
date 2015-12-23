@@ -120,7 +120,7 @@ void SpecificWorker::compute()
  */
 SpecificWorker::State SpecificWorker::setNewTarget()
 {
-	qDebug() << __FUNCTION__ ;
+	qDebug() << __FUNCTION__ << "robot at:" << inner->transform("world","robot") << ". Target at: " << cTarget.getTarget();
 	try
 	{	differentialrobot_proxy->setSpeedBase(0,0); }
 	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
@@ -130,22 +130,26 @@ SpecificWorker::State SpecificWorker::setNewTarget()
 	points  << inner->transform("world","robot");
 	points  << cTarget.getTranslation();
 	path.readRoadFromList( points );
-	
+	qDebug() << __FUNCTION__ << "Path built:" << points;
+	qDebug() << __FUNCTION__ << "---------------------------";
 	return State::FOLLOW_PATH;
 }
 
 SpecificWorker::State SpecificWorker::followPath()
 {
+	qDebug() << __FUNCTION__;
 	if( atTarget())
 	{
-		qDebug() << __FUNCTION__ << "At target. Moving to finalTurn";
+		qDebug() << __FUNCTION__ << "At target! Moving to finalTurn";
 		return State::FINAL_TURN;
 	}
+	
 	path.project( ldata );
 	controller();
-	
+	path.draw(innerViewer, inner, cTarget);
+
+	qDebug() << __FUNCTION__ << "---------------------------";
 	return State::FOLLOW_PATH;
-	
 }
 
 /**
@@ -281,7 +285,7 @@ bool SpecificWorker::atTarget()
 	static float dAnt = d;
 	
 	qDebug()<< "---------------------------";
-  qDebug()<< __FUNCTION__<< "target " << t << "distancia: " << d;
+  qDebug()<< __FUNCTION__<< "target(R) " << t << "distancia: " << d << "mm";
   
 	if ( d < 100 or (d<500 and (d-dAnt)>0) )
 	{
@@ -461,6 +465,7 @@ float SpecificWorker::go(const TargetPose &target)
 			qDebug() << "With rotation: " << target.ry;
 	state = State::SET_NEW_TARGET;
 	drawTarget("target",cTarget.getTarget(), "#ff0000");
+	qDebug() << __FUNCTION__ << "---------------------------";
 	return (inner->transform("world","robot") - cTarget.getTarget()).norm2();	//Distance to target in mm
 }
 

@@ -32,13 +32,19 @@
 #include "currenttarget.h"
 
 #define ROBOT_RADIUS 200  
+#define ROAD_STEP_SEPARATION 400
+#define FORCE_DISTANCE_LIMIT 600  //mm
+#define DELTA_H 50  //Increment of translation for J in rep forces
+
 
 class WayPoint
 {
 	public:
-		WayPoint()			{ pos = QVec::zeros(3); minDist = ROBOT_RADIUS; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
-		WayPoint(QVec p) 	{ pos = p; minDist = ROBOT_RADIUS; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
-		~WayPoint()			{};
+		WayPoint()
+			{ pos = QVec::zeros(3); minDist = ROBOT_RADIUS; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
+		WayPoint(QVec p) 	
+			{ pos = p; minDist = ROBOT_RADIUS; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
+		~WayPoint(){};
 	
 		//For ElasticBand
 		QVec pos;								// 3D point (x,y,z)
@@ -59,6 +65,7 @@ class WayPoint
 
 class WayPoints : public QList< WayPoint >
 {
+	
 	public:
 		WayPoints();
 		~WayPoints();
@@ -75,7 +82,13 @@ class WayPoints : public QList< WayPoint >
 		void clearDraw(InnerModelViewer *innerViewer);
 		QList<QVec> backList;
 		bool update();
-		bool project( const RoboCompLaser::TLaserData &ldata){};
+		
+		bool project( const RoboCompLaser::TLaserData &ldata);
+		bool checkVisiblePoints(const RoboCompLaser::TLaserData &laserData);
+		bool addPoints();
+		bool cleanPoints();
+		float computeForces(const RoboCompLaser::TLaserData& laserData);
+		void computeDistanceField(WayPoint &ball, const RoboCompLaser::TLaserData &laserData, float forceDistanceLimit);
 		
 		//GOOD ONES
 		float robotDistanceToCurrentPoint(InnerModel *innerModel);
@@ -152,6 +165,7 @@ class WayPoints : public QList< WayPoint >
 		float computeDistanceToLastVisible(WayPoints::iterator closestPoint, const QVec &robotPos);
 		QLine2D computeTangentAt(WayPoints::iterator w) const;
 		WayPoints::iterator computeClosestPointToRobot(const QVec& robot);
+		
 		
 };
 

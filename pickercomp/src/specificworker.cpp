@@ -46,6 +46,7 @@ void SpecificWorker::compute()
 void SpecificWorker::setPick(const Pick &myPick)
 {
 	RoboCompTrajectoryRobot2D::TargetPose t;
+	t.doRotation = false;
 	t.x = myPick.x;
 	t.y = myPick.y;
 	t.z = -myPick.z;
