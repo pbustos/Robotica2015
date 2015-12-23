@@ -216,7 +216,7 @@
 		
 
 		<!-- Base		 -->
-			<differentialrobot id="robot" port="10004" >
+			<omnirobot id="robot" port="10004" >
 
  				<translation id="laserPose" tx="0" ty="240" tz="100">
  					<laser id="laser" port="10003" measures="50" min="100" max="8000" angle="4" ifconfig="10000" />
@@ -232,7 +232,7 @@
 				<mesh id="base_mesh" file="/home/robocomp/robocomp/files/osgModels/robex/robex.ive"  tx="0" ty="10" tz="0" scale="1000"  />
 				
 					
-			</differentialrobot> <!--base -->
+			</omnirobot> <!--base -->
 
 
 			

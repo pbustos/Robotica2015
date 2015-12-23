@@ -6,8 +6,8 @@ TrajectoryRobot2D.Endpoints=tcp -p 0
 
 
 # Proxies for required interfaces
-DifferentialRobotProxy = differentialrobot:tcp -h localhost -p 0
 LaserProxy = laser:tcp -h localhost -p 0
+OmniRobotProxy = omnirobot:tcp -h localhost -p 0
 
 
 

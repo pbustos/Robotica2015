@@ -81,7 +81,7 @@
 #include <trajectoryrobot2dI.h>
 
 #include <Laser.h>
-#include <DifferentialRobot.h>
+#include <OmniRobot.h>
 #include <TrajectoryRobot2D.h>
 
 
@@ -92,7 +92,7 @@ using namespace std;
 using namespace RoboCompCommonBehavior;
 
 using namespace RoboCompLaser;
-using namespace RoboCompDifferentialRobot;
+using namespace RoboCompOmniRobot;
 using namespace RoboCompTrajectoryRobot2D;
 
 
@@ -126,28 +126,11 @@ int ::Controller::run(int argc, char* argv[])
 #endif
 	int status=EXIT_SUCCESS;
 
-	DifferentialRobotPrx differentialrobot_proxy;
 	LaserPrx laser_proxy;
+	OmniRobotPrx omnirobot_proxy;
 
 	string proxy, tmp;
 	initialize();
-
-
-	try
-	{
-		if (not GenericMonitor::configGetString(communicator(), prefix, "DifferentialRobotProxy", proxy, ""))
-		{
-			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy DifferentialRobotProxy\n";
-		}
-		differentialrobot_proxy = DifferentialRobotPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
-	}
-	catch(const Ice::Exception& ex)
-	{
-		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
-		return EXIT_FAILURE;
-	}
-	rInfo("DifferentialRobotProxy initialized Ok!");
-	mprx["DifferentialRobotProxy"] = (::IceProxy::Ice::Object*)(&differentialrobot_proxy);//Remote server proxy creation example
 
 
 	try
@@ -165,6 +148,23 @@ int ::Controller::run(int argc, char* argv[])
 	}
 	rInfo("LaserProxy initialized Ok!");
 	mprx["LaserProxy"] = (::IceProxy::Ice::Object*)(&laser_proxy);//Remote server proxy creation example
+
+
+	try
+	{
+		if (not GenericMonitor::configGetString(communicator(), prefix, "OmniRobotProxy", proxy, ""))
+		{
+			cout << "[" << PROGRAM_NAME << "]: Can't read configuration for proxy OmniRobotProxy\n";
+		}
+		omnirobot_proxy = OmniRobotPrx::uncheckedCast( communicator()->stringToProxy( proxy ) );
+	}
+	catch(const Ice::Exception& ex)
+	{
+		cout << "[" << PROGRAM_NAME << "]: Exception: " << ex;
+		return EXIT_FAILURE;
+	}
+	rInfo("OmniRobotProxy initialized Ok!");
+	mprx["OmniRobotProxy"] = (::IceProxy::Ice::Object*)(&omnirobot_proxy);//Remote server proxy creation example
 
 
 

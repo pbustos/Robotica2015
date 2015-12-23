@@ -93,6 +93,7 @@ private:
 	
 	OsgView *osgView;
 	InnerModelViewer *innerViewer;
+
 	
 public slots:
 	void startAction();

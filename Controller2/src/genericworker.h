@@ -27,6 +27,7 @@
 #include <ui_mainUI.h>
 
 #include <CommonBehavior.h>
+#include <OmniRobot.h>
 #include <DifferentialRobot.h>
 #include <Laser.h>
 #include <TrajectoryRobot2D.h>
@@ -40,6 +41,7 @@ typedef map <string,::IceProxy::Ice::Object*> MapPrx;
 
 using namespace std;
 
+using namespace RoboCompOmniRobot;
 using namespace RoboCompDifferentialRobot;
 using namespace RoboCompLaser;
 using namespace RoboCompTrajectoryRobot2D;
@@ -65,8 +67,8 @@ public:
 	QMutex *mutex;
 	
 
-	DifferentialRobotPrx differentialrobot_proxy;
 	LaserPrx laser_proxy;
+	OmniRobotPrx omnirobot_proxy;
 
 	virtual NavState getState() = 0;
 	virtual float goBackwards(const TargetPose &target) = 0;

@@ -33,6 +33,7 @@
 #include <innermodel/innermodeldraw.h>
 #include "currenttarget.h"
 #include "waypoints.h"
+#include "linefollower.h"
 
 #define ROBOT_SIZE 400.f
 #define ROBOT_RADIUS 200.f
@@ -68,7 +69,7 @@ private:
 	RoboCompTrajectoryRobot2D::NavState nState;
 	InnerModel* inner;
 	TLaserData ldata, ldataR;
-	TBaseState bState;
+	RoboCompOmniRobot::TBaseState bState;
 	CurrentTarget cTarget;
 	QGraphicsScene scene;
 	
@@ -83,7 +84,7 @@ private:
 	bool plan();
 	bool controller();
 
-	State freeWay(const QVec& tg);
+	void freeWay(const QVec& tg);
 	void histogram();
 	void stopRobot();
 	void stopRobotAndFinish();
@@ -96,6 +97,8 @@ private:
 	InnerModelViewer *innerViewer;
 	
 	WayPoints path;
+	
+	LineFollower linefollower;
 };
 
 #endif

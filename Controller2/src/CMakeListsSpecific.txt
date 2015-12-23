@@ -5,6 +5,7 @@ SET ( SOURCES
   specificmonitor.cpp
   waypoints.cpp
   currenttarget.cpp
+  linefollower.cpp
 #  $ENV{ROBOCOMP}/classes/agmInner/agmInner.cpp
   $ENV{ROBOCOMP}/classes/qline2d/qline2d.cpp
 

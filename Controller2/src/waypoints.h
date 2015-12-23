@@ -31,19 +31,20 @@
 #include <qline2d/qline2d.h>
 #include "currenttarget.h"
 
-#define ROBOT_RADIUS 200  
-#define ROAD_STEP_SEPARATION 400
-#define FORCE_DISTANCE_LIMIT 600  //mm
-#define DELTA_H 50  //Increment of translation for J in rep forces
 
+#define ROAD_STEP_SEPARATION (robotRadius*2)
+#define FORCE_DISTANCE_LIMIT (robotRadius*3)  //mm
+#define DELTA_H (robotRadius/4)  //Increment of translation for J in rep forces
+
+class WayPoints;
 
 class WayPoint
 {
 	public:
 		WayPoint()
-			{ pos = QVec::zeros(3); minDist = ROBOT_RADIUS; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
+			{ pos = QVec::zeros(3); minDist = 0; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
 		WayPoint(QVec p) 	
-			{ pos = p; minDist = ROBOT_RADIUS; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
+			{ pos = p; minDist = 0; minDistAnt = 0.f; isVisible = false; minDistPoint = QVec::zeros(3); hasRotation = false;};
 		~WayPoint(){};
 	
 		//For ElasticBand
@@ -83,6 +84,7 @@ class WayPoints : public QList< WayPoint >
 		QList<QVec> backList;
 		bool update();
 		
+		void setRobotRadius( float r) { robotRadius = r;};
 		bool project( const RoboCompLaser::TLaserData &ldata);
 		bool checkVisiblePoints(const RoboCompLaser::TLaserData &laserData);
 		bool addPoints();
@@ -157,7 +159,7 @@ class WayPoints : public QList< WayPoint >
 		long elapsedTime;
 		int initialDurationEstimation;
 		float antDist; //To be used in robotDistanceVariationToTarget computation
-		
+		float robotRadius;
 		QMutex mutex;
 		
 		float computeRoadCurvature(WayPoints::iterator closestPoint, uint pointsAhead);

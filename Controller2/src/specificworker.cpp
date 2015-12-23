@@ -31,13 +31,21 @@ SpecificWorker::SpecificWorker(MapPrx& mprx) : GenericWorker(mprx)
 		qFatal("InnerModel file not found");
 			
 	path.setInnerModel(inner);
+	path.setRobotRadius(ROBOT_RADIUS);
+	
+	try 
+	{	
+		ldata = laser_proxy->getLaserData(); 
+		linefollower.initialize(inner, ldata, 1);
+	}
+	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 	
 	graphicsView->setScene(&scene);
 	graphicsView->show();
 	graphicsView->scale(3,3);
 	
 	//Innermodelviewer
-	osgView = new OsgView(this);
+	osgView = new OsgView(this->frame);
 	osgGA::TrackballManipulator *tb = new osgGA::TrackballManipulator;
 	osg::Vec3d eye(osg::Vec3(4000.,4000.,-1000.));
 	osg::Vec3d center(osg::Vec3(0.,0.,-0.));
@@ -67,7 +75,7 @@ void SpecificWorker::compute()
 {
   try
   {
-     differentialrobot_proxy->getBaseState(bState);
+     omnirobot_proxy->getBaseState(bState);
      ldata = laser_proxy->getLaserData();
      inner->updateTransformValues("robot", bState.x, 0, bState.z, 0, bState.alpha, 0);
 	
@@ -122,7 +130,7 @@ SpecificWorker::State SpecificWorker::setNewTarget()
 {
 	qDebug() << __FUNCTION__ << "robot at:" << inner->transform("world","robot") << ". Target at: " << cTarget.getTarget();
 	try
-	{	differentialrobot_proxy->setSpeedBase(0,0); }
+	{	omnirobot_proxy->setSpeedBase(0, 0,0); }
 	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 	
 	//Build the path. Initially a 2 points path
@@ -188,11 +196,12 @@ SpecificWorker::State SpecificWorker::finalTurn()
 	{	
 		try	
 		{	
-			differentialrobot_proxy->setSpeedBase(0, -0.4 * error);
+			omnirobot_proxy->setSpeedBase(0, 0, -0.4 * error);
 			//yDQ.enqueue(-0.4*error); if(yDQ.size() >= 100) yDQ.dequeue();	
 		}
 		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};	
 	}
+	return State::FINAL_TURN;
 }
 
 
@@ -221,12 +230,13 @@ SpecificWorker::State SpecificWorker::turn()
 		
 		try
 		{ 
-			differentialrobot_proxy->setSpeedBase(0, rot);
+			omnirobot_proxy->setSpeedBase(0, 0, rot);
 			//yDQ.enqueue(rot); if(yDQ.size() >= 100) yDQ.dequeue();	
 			//yDAQ.enqueue(0); if(yDAQ.size() >= 100) yDAQ.dequeue();	
 		}
 		catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 	}
+	return State::TURN;
 }
 
 /**
@@ -234,7 +244,7 @@ SpecificWorker::State SpecificWorker::turn()
  * 
  * @return bool
  */
-SpecificWorker::State SpecificWorker::freeWay(const QVec &tg)
+void SpecificWorker::freeWay(const QVec &tg)
 {
 // 	Q_ASSERT( tg.size()>=3 );
 // 	QVec t = inner->transform("robot", tg.subVector(0,2) , "world");
@@ -270,12 +280,13 @@ SpecificWorker::State SpecificWorker::freeWay(const QVec &tg)
 ///////////////////////
 bool SpecificWorker::controller()
 {
-
+	
+	return true;
 }
 
 bool SpecificWorker::plan()
 {
-
+	return true;
 }
 
 bool SpecificWorker::atTarget()
@@ -365,7 +376,7 @@ void SpecificWorker::stopRobot()
 	try
 	{	
 		qDebug() << __FUNCTION__ ;
-		differentialrobot_proxy->setSpeedBase(0,0);
+		omnirobot_proxy->setSpeedBase(0, 0,0);
 	}
 	catch(Ice::Exception &ex) {std::cout<<ex.what()<<std::endl;};
 }
@@ -375,7 +386,7 @@ void SpecificWorker::stopRobotAndFinish()
 	try
 	{	
 		qDebug() << __FUNCTION__ ;
-		differentialrobot_proxy->setSpeedBase(0,0);
+		omnirobot_proxy->setSpeedBase(0, 0,0);
 		cTarget.isActiveTarget = false;
 		state = State::FINISH;
 		undrawTarget("target");		
@@ -421,9 +432,9 @@ RoboCompTrajectoryRobot2D::NavState SpecificWorker::toMiddleware()
 			n.x = bState.x;
 			n.z = bState.z;
 			n.ang = bState.alpha;
-			n.advV = bState.advV;
+	/*		n.advV = bState.advV;
 			n.rotV = bState.rotV;
-			n.distanceToTarget = inner->transform("robot", cTarget.getTarget(), "world").norm2();
+	*/		n.distanceToTarget = inner->transform("robot", cTarget.getTarget(), "world").norm2();
 			return n;
 		};
 /////////////////////////////////////////7

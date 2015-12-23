@@ -38,6 +38,7 @@ WayPoints::WayPoints()
 	requiresReplanning = false;
 	meanSpeed = 300.f;  //Initial speed. Should be read from disk
 	antDist = std::numeric_limits< float >::max();
+	robotRadius = 200.f;
 }
 
 WayPoints::~WayPoints()
@@ -712,12 +713,15 @@ float WayPoints::computeForces(const RoboCompLaser::TLaserData& laserData)
 			qDebug() << atractionForce << repulsionForce;
 			qFatal("change");	
 		}
-		//Now we remove the tangencial component of the force to avoid recirculation of band points   NO VA BIEN DEL TODO!!!!!!!!!!!!!!!!!
-		QVec pp = road.getTangentToCurrentPoint().getPerpendicularVector();
-		QVec nChange = pp * (pp * change);
 		
-		w1.pos = w1.pos - nChange;		
-		totalChange = totalChange + change.norm2();
+		// Now we remove the tangencial component of the force to avoid recirculation of band points 
+		// by projecting the resulting force on the perpendicular to the point.
+		QVec pp = road.getTangentToCurrentPoint().getPerpendicularVector().normalize();
+		Q_ASSERT(pp.size() == 3);
+		QVec nChange = pp* (pp * change);
+		
+		w1.pos = w1.pos - change;		
+		totalChange = totalChange + nChange.norm2();
 	}
 	return totalChange;
 }

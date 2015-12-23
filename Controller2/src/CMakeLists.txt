@@ -44,7 +44,7 @@ SET ( HEADERS
 
 #ROBOCOMP
 ROBOCOMP_INITIALIZE( $ENV{ROBOCOMP}/ )
-ROBOCOMP_WRAP_ICE( CommonBehavior Laser DifferentialRobot DifferentialRobot TrajectoryRobot2D )
+ROBOCOMP_WRAP_ICE( CommonBehavior Laser DifferentialRobot OmniRobot TrajectoryRobot2D )
 SET (EXECUTABLE_OUTPUT_PATH ${RC_COMPONENT_DEVEL_PATH}/bin)
 
 # Qt4

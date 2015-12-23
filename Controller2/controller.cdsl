@@ -1,5 +1,5 @@
 import "/robocomp/interfaces/IDSLs/Laser.idsl";
-import "/robocomp/interfaces/IDSLs/DifferentialRobot.idsl";
+import "/robocomp/interfaces/IDSLs/OmniRobot.idsl";
 import "/robocomp/interfaces/IDSLs/TrajectoryRobot2D.idsl";
 
 
@@ -8,7 +8,7 @@ Component Controller
 	Communications
 	{
 		implements TrajectoryRobot2D;
-		requires Laser,DifferentialRobot;
+		requires Laser,OmniRobot;
 	};
 	language Cpp;
 	gui Qt(QWidget);
